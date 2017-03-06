@@ -28,6 +28,7 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_err.cpp
              ${source_DIR}/dm_execution_engine.cpp
              ${source_DIR}/dm_execution_engine_gpu.cpp
+             ${source_DIR}/dm_execution_engine_cpu.cpp
              ${source_DIR}/dm_kernel_object.cpp
              ${source_DIR}/dm_blob.cpp)
 

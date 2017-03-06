@@ -17,14 +17,20 @@
 #include "dm_execution_engine.hpp"
 #include <string>
 
-class DeepMon {
-private:
-    DM_Execution_Engine *cpu_execution_engine;
-    DM_Execution_Engine *gpu_execution_engine;
-public:
-    DeepMon();
-    DeepMon(std::string package_path);
-};
+namespace deepmon {
+
+    class DeepMon {
+    private:
+        DM_Execution_Engine *cpu_execution_engine;
+        DM_Execution_Engine *gpu_execution_engine;
+    public:
+        DeepMon();
+        DeepMon(std::string package_path);
+        DM_Execution_Engine *get_excution_engine(bool is_cpu_engine);
+        static DeepMon &Get();
+        static DeepMon &Get(std::string package_path);
+    };
+}
 
 #endif /* DM_HPP */
 

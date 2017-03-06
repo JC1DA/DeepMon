@@ -85,3 +85,10 @@ __kernel void convertHalfToFloat(
     //output[idx] = (float)input[idx];
 }
 #endif
+
+__kernel void memcpy(
+        __global const real *input,
+        __global real *output) {
+    int idx = get_global_id(0);
+    output[idx] = input[idx];
+}

@@ -14,20 +14,22 @@
 #ifndef DM_COMMON_HPP
 #define DM_COMMON_HPP
 
-typedef enum {
-    ENVIRONMENT_CPU,
-    ENVIRONMENT_GPU
-} ENVIRONMENT_TYPE;
+namespace deepmon {
+    typedef enum {
+        ENVIRONMENT_CPU,
+        ENVIRONMENT_GPU
+    } ENVIRONMENT_TYPE;
 
-typedef enum {
-    PRECISION_32,
-    PRECISION_16
-} PRESICION_TYPE;
+    typedef enum {
+        PRECISION_32,
+        PRECISION_16
+    } PRESICION_TYPE;
 
-typedef enum {
-    DM_LAYOUT,
-    CAFFE_LAYOUT
-} MEMORY_LAYOUT;
+    typedef enum {
+        DM_LAYOUT,
+        CAFFE_LAYOUT
+    } MEMORY_LAYOUT;
+}
 
 #endif /* DM_COMMON_HPP */
 
