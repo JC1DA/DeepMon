@@ -15,6 +15,7 @@
 #define DM_EXECUTION_ENGINE_HPP
 
 #include "dm_common.hpp"
+#include "dm_blob.hpp"
 
 class DM_Execution_Engine {
 protected:
@@ -22,7 +23,7 @@ protected:
     bool initialized = false;
 public:
     DM_Execution_Engine(ENVIRONMENT_TYPE type);
-    //virtual void do_conv(void *input, void *params, void *output);
+    virtual void do_conv();
     //virtual void do_pooling(void *input, void *params, void *output);
     //virtual void do_fully_connected(void *input, void *params, void *output);
     //virtual void do_activation(void *input, void *params, void *output);

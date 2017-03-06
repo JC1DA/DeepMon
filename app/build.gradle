@@ -13,6 +13,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11"
+                arguments "-DANDROID_STL=gnustl_static"
             }
         }
         ndk {

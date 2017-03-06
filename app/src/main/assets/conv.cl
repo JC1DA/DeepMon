@@ -43,13 +43,23 @@ __kernel void dm_conv_base(
                     int filter_start_idx = getIndexFrom4D(filter_n, filter_h, filter_w, filter_c, thread_id_z, y, x, 0);
                     int remaining = input_c;
                     while(remaining > VWM) {
-                        realM input_data = vloadM(0, &input[input_start_idx]);
-                        realM filter_data = vloadM(0, &filter_Weights[filter_start_idx]);
-asfasgfsaas
+                        realM input_data = vloadM(input[input_start_idx]);
+                        realM filter_data = vloadM(filter_Weights[filter_start_idx]);
+                        result += dotM(input_data, filter_data);
+                        remaining -= VWM;
+                        input_start_idx++;
+                        filter_start_idx++;
+                    }
+                    while(remaining > 0) {
+                        result += input[input_start_idx] * filter_Weights[filter_start_idx];
+                        remaining -= 1;
+                        input_start_idx++;
+                        filter_start_idx++;
                     }
                 }
             }
         }
-        
+
+        output[getIndexFrom4D(n, output_h, output_w, output_c, thread_id_n, thread_id_y, thread_id_x, thread_id_z)] = result;
     }
 }

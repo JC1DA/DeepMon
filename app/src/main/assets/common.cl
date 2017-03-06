@@ -36,19 +36,24 @@
 #ifdef VWM
     #if VWM == 1
         typedef real realM;
-        #define vload vloadM;
+        #define vloadM(X) vload(0, &(X));
+        #define dotM(X,Y) ((X) * (Y))
     #elif VWM == 2
         typedef real2 realM;
-        #define vload2 vloadM;
+        #define vloadM(X) vload2(0, &(X));
+        #define dotM(X,Y) dot((X),(Y))
     #elif VWM == 4
         typedef real4 realM;
-        #define vload4 vloadM;
+        #define vloadM(X) vload4(0, &(X));
+        #define dotM(X,Y) dot((X),(Y))
     #elif VWM == 8
         typedef real8 realM;
-        #define vload8 vloadM;
+        #define vloadM(X) vload8(0, &(X));
+        #define dotM(X,Y) (dot((X.s0123),(Y.s0123)) + dot((X.s4567),(Y.s4567)))
     #elif VWM == 16
         typedef real16 realM;
-        #define vload16 vloadM;
+        #define vloadM(X) vload16(0, &(X));
+        #define dotM(X,Y) (dot((X.s0123),(Y.s0123)) + dot((X.s4567),(Y.s4567)) + dot((X.s89ab),(Y.s89ab)) + dot((X.scdef),(Y.scdef)))
     #endif
 #endif
 

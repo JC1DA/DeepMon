@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Utilities.copyFile(activity, "common.cl");
                 Utilities.copyFile(activity, "im2col.cl");
+                Utilities.copyFile(activity, "conv.cl");
                 testDeepMonWithPackageName(activity.getPackageName().toString());
             }
         });

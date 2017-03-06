@@ -13,7 +13,7 @@ DeepMon::DeepMon() {
 }
 
 DeepMon::DeepMon(std::string package_path) {
-    this->cpu_execution_engine = NULL;
+    //this->cpu_execution_engine = NULL;
     this->gpu_execution_engine = new DM_Execution_Engine_GPU(package_path);
 }
 

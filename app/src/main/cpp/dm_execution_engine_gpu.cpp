@@ -10,8 +10,10 @@
 #include "dm_execution_engine.hpp"
 #include "dm_execution_engine_gpu.hpp"
 #include "dm_kernels.hpp"
+#include "dm_kernel_object.hpp"
 
 #include <sys/stat.h>
+#include <string>
 
 DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRONMENT_GPU) {
 #ifdef PRINT_FUNCTION_NAME
@@ -19,15 +21,22 @@ DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRON
 #endif
 
     //initialize GPU
-    if(!this->scan_for_gpus())
+    if(!this->scan_for_gpus()) {
+        LOGE("Failed to scan for gpus");
         return;
-    
+    }
+
     //compile kernels
-    if(compile_kernels())
+    if(!compile_kernels()) {
+        LOGE("Failed to compile kernel code");
         return;
+    }
     
     //extract kernels
-    
+    if(!read_kernels()) {
+        LOGE("Failed to extract kernels from program code");
+        return;
+    }
     
     this->initialized = true;
 }
@@ -38,12 +47,24 @@ DM_Execution_Engine_GPU::DM_Execution_Engine_GPU(std::string package_path) : DM_
 #endif
 
     //initialize GPU
-    if(!this->scan_for_gpus())
+    if(!this->scan_for_gpus()) {
+        LOGE("Failed to scan for gpus");
         return;
+    }
 
     //compile kernels
-    if(compile_kernels(package_path))
+    if(!compile_kernels(package_path)) {
+        LOGE("Failed to compile kernel code");
         return;
+    }
+
+    //extract kernels
+    if(!read_kernels()) {
+        LOGE("Failed to extract kernels from program code");
+        return;
+    }
+
+    this->initialized = true;
 }
 
 bool DM_Execution_Engine_GPU::scan_for_gpus() {
@@ -391,4 +412,50 @@ bool DM_Execution_Engine_GPU::compile_kernels(std::string package_path) {
     }
 
     return is_compiled;
+}
+
+bool DM_Execution_Engine_GPU::read_kernels() {
+#ifdef PRINT_FUNCTION_NAME
+    LOGD("--%s--", __PRETTY_FUNCTION__);
+#endif
+    bool is_successful = false;
+
+    if(this->program_32 != NULL) {
+        cl_int err = CL_SUCCESS;
+        for(int i = 0 ; i < this->kernel_names.size() ; i++) {
+            std::string kernel_name = this->kernel_names.at(i);
+#ifdef PRINT_VARS
+            LOGD("FP32 Program: Extracting %s kernel", kernel_name.c_str());
+#endif
+            cl_kernel kernel = clCreateKernel(this->program_32, kernel_name.c_str(), &err);
+            SAMPLE_CHECK_ERRORS(err);
+            if(err == CL_SUCCESS) {
+                //extract more information
+                DM_Kernel_Object *kobj = new DM_Kernel_Object(kernel);
+                std::pair<std::string, DM_Kernel_Object *> pair(kernel_name, kobj);
+                this->kernels_map_fp32.insert(pair);
+            }
+        }
+        is_successful = true;
+    }
+
+    if(this->program_16 != NULL) {
+        cl_int err = CL_SUCCESS;
+        for(int i = 0 ; i < this->kernel_names.size() ; i++) {
+            std::string kernel_name = this->kernel_names.at(i);
+#ifdef PRINT_VARS
+            LOGD("FP16 Program: Extracting %s kernel", kernel_name.c_str());
+#endif
+            cl_kernel kernel = clCreateKernel(this->program_16, kernel_name.c_str(), &err);
+            SAMPLE_CHECK_ERRORS(err);
+            if(err == CL_SUCCESS) {
+                //extract more information
+                DM_Kernel_Object *kobj = new DM_Kernel_Object(kernel);
+                std::pair<std::string, DM_Kernel_Object *> pair(kernel_name, kobj);
+                this->kernels_map_fp16.insert(pair);
+            }
+        }
+    }
+
+    return is_successful;
 }
