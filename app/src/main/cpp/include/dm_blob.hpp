@@ -21,6 +21,7 @@ namespace deepmon {
 
     public:
         DM_Blob(std::vector<int> shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data);
+        ~DM_Blob();
         ENVIRONMENT_TYPE get_env() {
             return this->environment;
         }

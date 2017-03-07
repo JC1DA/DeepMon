@@ -61,9 +61,9 @@ namespace deepmon {
         DM_Blob *convert_to_cpu_blob(DM_Blob *blob);
 
         //kernel activation
-        cl_mem execute_memcpy(PRESICION_TYPE precision, cl_mem cl_input, int num_items);
-        cl_mem execute_float_to_half_conversion(cl_mem cl_input, int num_items);
-        cl_mem execute_half_to_float_conversion(cl_mem cl_input, int num_items);
+        bool execute_memcpy(PRESICION_TYPE precision, cl_mem cl_output, cl_mem cl_input, int num_items);
+        bool execute_float_to_half_conversion(cl_mem cl_output, cl_mem cl_input, int num_items);
+        bool execute_half_to_float_conversion(cl_mem cl_output, cl_mem cl_input, int num_items);
 
         //kernels list
         std::vector<std::string> kernel_names {
@@ -79,8 +79,11 @@ namespace deepmon {
     public:
         DM_Execution_Engine_GPU();
         DM_Execution_Engine_GPU(std::string package_path);
+
         void finalize_all_tasks();
         void create_memory(DM_Blob *blob, float *initialized_data);
+        DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob);
+        DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision);
     };
 }
 

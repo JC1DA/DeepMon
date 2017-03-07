@@ -468,10 +468,11 @@ namespace deepmon {
 #ifdef PRINT_FUNCTION_NAME
         LOGD("--%s--", __PRETTY_FUNCTION__);
 #endif
-        static int current_idx = 0;
+        /*static int current_idx = 0;
         cl_command_queue queue = this->queues[current_idx];
         current_idx = (current_idx + 1) % this->num_queues;
-        return queue;
+        return queue;*/
+        return this->queues[0];
     }
 
     void DM_Execution_Engine_GPU::finalize_all_tasks() {
@@ -491,6 +492,7 @@ namespace deepmon {
         cl_int err = CL_SUCCESS;
 
         cl_command_queue current_queue = get_current_queue();
+
         float *buf_dst = (float *)clEnqueueMapBuffer(current_queue, \
 					cl_data, \
 					CL_TRUE, CL_MAP_WRITE, \
@@ -533,8 +535,8 @@ namespace deepmon {
             return false;
 
         cl_kernel kernel = (this->kernels_map_fp16.find(std::string(KERNEL_CONVERT_FLOAT_TO_HALF))->second)->get_kernel();
-        err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &cl_data);
-        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_tmp);
+        err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &cl_tmp);
+        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_data);
         SAMPLE_CHECK_ERRORS(err);
         if(err != CL_SUCCESS)
             return false;
@@ -588,12 +590,10 @@ namespace deepmon {
                 return NULL;
 
             cl_int err = CL_SUCCESS;
-            cl_command_queue current_queue = get_current_queue();
 
             cl_mem cl_data = NULL;
-            int cl_data_size = 0;
+            int cl_data_size = blob->get_size() * sizeof(cl_float);
             if(blob->get_precision() == PRECISION_16) {
-                cl_data_size = blob->get_mem_size() * 2;
                 cl_data = clCreateBuffer(
                         this->context,
                         CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
@@ -604,39 +604,15 @@ namespace deepmon {
                 if(err != CL_SUCCESS)
                     return NULL;
 
-                cl_mem blob_mem = blob->get_gpu_data();
-                cl_kernel kernel = (this->kernels_map_fp16.find(std::string(KERNEL_CONVERT_HALF_TO_FLOAT))->second)->get_kernel();
-                err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &blob_mem);
-                err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_data);
-
-                SAMPLE_CHECK_ERRORS(err);
-                if(err != CL_SUCCESS) {
-                    clReleaseMemObject(cl_data);
-                    return NULL;
-                }
-
-                size_t wgs[1] = {(size_t) blob->get_mem_size() / sizeof(cl_half)};
-
-                err = clEnqueueNDRangeKernel(
-                        current_queue,
-                        kernel,
-                        1,
-                        0,
-                        wgs,
-                        0,
-                        0, 0, 0
-                );
-                err |= clFinish(current_queue);
-                SAMPLE_CHECK_ERRORS(err);
-
-                if(err != CL_SUCCESS) {
+                if(!execute_half_to_float_conversion(cl_data, blob->get_gpu_data(), blob->get_size())) {
                     clReleaseMemObject(cl_data);
                     return NULL;
                 }
             } else if(blob->get_precision() == PRECISION_32) {
                 cl_data = blob->get_gpu_data();
-                cl_data_size = blob->get_mem_size();
             }
+
+            cl_command_queue current_queue = get_current_queue();
 
             float *data = (float *)clEnqueueMapBuffer(current_queue, \
 					cl_data, \
@@ -654,7 +630,7 @@ namespace deepmon {
             result = new DM_Blob(blob->get_shapes(), ENVIRONMENT_CPU, PRECISION_32, data);
 
             clEnqueueUnmapMemObject(current_queue, \
-					blob->get_gpu_data(), \
+					cl_data, \
 					data, \
 					0, NULL, NULL);
 
@@ -675,17 +651,18 @@ namespace deepmon {
             if(blob->get_precision() == PRECISION_16 && !this->support_fp16)
                 return NULL;
 
-            cl_mem cl_data = NULL;
-            if(blob->get_precision() == PRECISION_32)
-                cl_data = execute_memcpy(PRECISION_32, blob->get_gpu_data(), blob->get_size());
-            else if(blob->get_precision() == PRECISION_16)
-                cl_data = execute_half_to_float_conversion(blob->get_gpu_data(), blob->get_size());
-
-            if(cl_data == NULL)
-                return NULL;
-
             result = new DM_Blob(blob->get_shapes(), ENVIRONMENT_GPU, PRECISION_32, NULL);
-            result->set_gpu_data(cl_data);
+
+            bool is_successful;
+            if(blob->get_precision() == PRECISION_32)
+                is_successful = execute_memcpy(PRECISION_32, result->get_gpu_data(), blob->get_gpu_data(), blob->get_size());
+            else if(blob->get_precision() == PRECISION_16)
+                is_successful = execute_half_to_float_conversion(result->get_gpu_data(), blob->get_gpu_data(), blob->get_size());
+
+            if(!is_successful) {
+                delete result;
+                return NULL;
+            }
         } else if(blob->get_env() == ENVIRONMENT_CPU) {
             result = new DM_Blob(blob->get_shapes(), ENVIRONMENT_GPU, PRECISION_32, blob->get_cpu_data());
         }
@@ -700,17 +677,18 @@ namespace deepmon {
         DM_Blob *result = NULL;
 
         if(blob->get_env() == ENVIRONMENT_GPU) {
-            cl_mem cl_data = NULL;
-            if(blob->get_precision() == PRECISION_16)
-                cl_data = execute_memcpy(PRECISION_16, blob->get_gpu_data(), blob->get_size());
-            else if(blob->get_precision() == PRECISION_32)
-                cl_data = execute_float_to_half_conversion(blob->get_gpu_data(), blob->get_size());
-
-            if(cl_data == NULL)
-                return NULL;
-
             result = new DM_Blob(blob->get_shapes(), ENVIRONMENT_GPU, PRECISION_16, NULL);
-            result->set_gpu_data(cl_data);
+
+            bool is_successful;
+            if(blob->get_precision() == PRECISION_16)
+                is_successful = execute_memcpy(PRECISION_16, result->get_gpu_data(), blob->get_gpu_data(), blob->get_size());
+            else if(blob->get_precision() == PRECISION_32)
+                is_successful = execute_float_to_half_conversion(result->get_gpu_data(), blob->get_gpu_data(), blob->get_size());
+
+            if(!is_successful) {
+                delete result;
+                return NULL;
+            }
         } else if(blob->get_env() == ENVIRONMENT_CPU) {
             result = new DM_Blob(blob->get_shapes(), ENVIRONMENT_GPU, PRECISION_16, blob->get_cpu_data());
         }
@@ -718,26 +696,10 @@ namespace deepmon {
         return result;
     }
 
-    cl_mem DM_Execution_Engine_GPU::execute_memcpy(PRESICION_TYPE precision, cl_mem cl_input,
+    bool DM_Execution_Engine_GPU::execute_memcpy(PRESICION_TYPE precision, cl_mem cl_output, cl_mem cl_input,
                                                    int num_items) {
-        int cl_data_size = 0;
-        if(precision == PRECISION_16)
-            cl_data_size = num_items * sizeof(cl_half);
-        else if(precision == PRECISION_32)
-            cl_data_size = num_items * sizeof(cl_float);
-
         cl_command_queue current_queue = get_current_queue();
         cl_int err = CL_SUCCESS;
-
-        cl_mem cl_data = clCreateBuffer(
-                this->context,
-                CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                cl_data_size,
-                NULL,//buffer of data
-                &err);
-        if(err != CL_SUCCESS) {
-            return NULL;
-        }
 
         cl_kernel kernel = NULL;
         if(precision == PRECISION_32)
@@ -746,14 +708,13 @@ namespace deepmon {
             kernel = (this->kernels_map_fp16.find(std::string(KERNEL_MEMCPY)))->second->get_kernel();
 
         err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &cl_input);
-        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_data);
+        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_output);
         SAMPLE_CHECK_ERRORS(err);
         if(err != CL_SUCCESS) {
-            clReleaseMemObject(cl_data);
-            return NULL;
+            return false;
         }
 
-        size_t wgs[1] = {num_items};
+        size_t wgs[1] = {(size_t)num_items};
 
         err = clEnqueueNDRangeKernel(
                 current_queue,
@@ -768,41 +729,27 @@ namespace deepmon {
         SAMPLE_CHECK_ERRORS(err);
 
         if(err != CL_SUCCESS) {
-            clReleaseMemObject(cl_data);
-            return NULL;
+            return false;
         }
 
-        return cl_data;
+        return true;
     }
 
-    cl_mem DM_Execution_Engine_GPU::execute_float_to_half_conversion(cl_mem cl_input,
+    bool DM_Execution_Engine_GPU::execute_float_to_half_conversion(cl_mem cl_output, cl_mem cl_input,
                                                                      int num_items) {
-        int cl_data_size = num_items * sizeof(cl_half);
-
         cl_command_queue current_queue = get_current_queue();
         cl_int err = CL_SUCCESS;
-
-        cl_mem cl_data = clCreateBuffer(
-                this->context,
-                CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                cl_data_size,
-                NULL,//buffer of data
-                &err);
-        if(err != CL_SUCCESS) {
-            return NULL;
-        }
 
         cl_kernel kernel = (this->kernels_map_fp16.find(std::string(KERNEL_CONVERT_FLOAT_TO_HALF)))->second->get_kernel();
 
         err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &cl_input);
-        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_data);
+        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_output);
         SAMPLE_CHECK_ERRORS(err);
         if(err != CL_SUCCESS) {
-            clReleaseMemObject(cl_data);
-            return NULL;
+            return false;
         }
 
-        size_t wgs[1] = {num_items};
+        size_t wgs[1] = {(size_t)num_items};
 
         err = clEnqueueNDRangeKernel(
                 current_queue,
@@ -817,41 +764,27 @@ namespace deepmon {
         SAMPLE_CHECK_ERRORS(err);
 
         if(err != CL_SUCCESS) {
-            clReleaseMemObject(cl_data);
             return NULL;
         }
 
-        return cl_data;
+        return true;
     }
 
-    cl_mem DM_Execution_Engine_GPU::execute_half_to_float_conversion(cl_mem cl_input,
+    bool DM_Execution_Engine_GPU::execute_half_to_float_conversion(cl_mem cl_output, cl_mem cl_input,
                                                                      int num_items) {
-        int cl_data_size = num_items * sizeof(cl_float);
-
         cl_command_queue current_queue = get_current_queue();
         cl_int err = CL_SUCCESS;
-
-        cl_mem cl_data = clCreateBuffer(
-                this->context,
-                CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
-                cl_data_size,
-                NULL,//buffer of data
-                &err);
-        if(err != CL_SUCCESS) {
-            return NULL;
-        }
 
         cl_kernel kernel = (this->kernels_map_fp16.find(std::string(KERNEL_CONVERT_HALF_TO_FLOAT)))->second->get_kernel();
 
         err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &cl_input);
-        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_data);
+        err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &cl_output);
         SAMPLE_CHECK_ERRORS(err);
         if(err != CL_SUCCESS) {
-            clReleaseMemObject(cl_data);
-            return NULL;
+            return false;
         }
 
-        size_t wgs[1] = {num_items};
+        size_t wgs[1] = {(size_t)num_items};
 
         err = clEnqueueNDRangeKernel(
                 current_queue,
@@ -866,11 +799,10 @@ namespace deepmon {
         SAMPLE_CHECK_ERRORS(err);
 
         if(err != CL_SUCCESS) {
-            clReleaseMemObject(cl_data);
             return NULL;
         }
 
-        return cl_data;
+        return true;
     }
 
     void DM_Execution_Engine_GPU::create_memory(DM_Blob *blob, float *initialized_data) {
@@ -912,5 +844,19 @@ namespace deepmon {
             blob->set_gpu_data(cl_data);
         } else
             blob->set_corrupted(true);
+    }
+
+    DM_Blob * DM_Execution_Engine_GPU::blob_convert_to_cpu_blob(DM_Blob *blob) {
+        return convert_to_cpu_blob(blob);
+    }
+
+    DM_Blob * DM_Execution_Engine_GPU::blob_convert_to_gpu_blob(DM_Blob *blob,
+                                                                PRESICION_TYPE precision) {
+        if(precision == PRECISION_16)
+            return convert_to_gpu_fp16_blob(blob);
+        else if(precision == PRECISION_32)
+            return convert_to_gpu_fp32_blob(blob);
+        else
+            return NULL;
     }
 }

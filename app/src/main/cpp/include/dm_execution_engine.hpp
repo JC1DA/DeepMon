@@ -25,6 +25,8 @@ namespace deepmon {
     public:
         DM_Execution_Engine(ENVIRONMENT_TYPE type);
         virtual void create_memory(DM_Blob *blob, float *initialized_data)=0;
+        virtual DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob) = 0;
+        virtual DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision) = 0;
         virtual void finalize_all_tasks() = 0;
         //virtual void do_conv();
         //virtual void do_pooling(void *input, void *params, void *output);

@@ -16,6 +16,8 @@ namespace deepmon {
 #ifdef PRINT_FUNCTION_NAME
         LOGD("--%s--", __PRETTY_FUNCTION__);
 #endif
+        this->cpu_data = NULL;
+        this->gpu_data = NULL;
         this->size = 1;
         for(std::vector<int>::iterator it = shapes.begin() ; it != shapes.end() ; it++) {
             this->shapes.push_back(*it);
@@ -34,6 +36,16 @@ namespace deepmon {
         }
     }
 
+    DM_Blob::~DM_Blob() {
+        if(this->cpu_data != NULL) {
+            delete this->cpu_data;
+            this->cpu_data = NULL;
+        }
 
+        if(this->gpu_data != NULL) {
+            clReleaseMemObject(this->gpu_data);
+            this->gpu_data = NULL;
+        }
+    }
 }
 

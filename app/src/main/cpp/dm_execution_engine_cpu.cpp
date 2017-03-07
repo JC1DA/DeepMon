@@ -35,4 +35,12 @@ namespace deepmon {
         LOGD("--%s--", __PRETTY_FUNCTION__);
 #endif
     }
+
+    DM_Blob *DM_Execution_Engine_CPU::blob_convert_to_cpu_blob(DM_Blob *blob) {
+        return NULL;
+    }
+
+    DM_Blob *DM_Execution_Engine_CPU::blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision){
+        return NULL;
+    }
 }
