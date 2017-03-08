@@ -859,4 +859,10 @@ namespace deepmon {
         else
             return NULL;
     }
+
+    void DM_Execution_Engine_GPU::do_conv(DM_Blob *input, DM_Blob *output, DM_Blob *filters,
+                                          DM_Blob *biases, std::vector<int> strides,
+                                          std::vector<int> pads, std::vector<int> dilations) {
+
+    }
 }

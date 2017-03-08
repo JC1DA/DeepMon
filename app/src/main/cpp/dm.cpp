@@ -9,6 +9,7 @@
 #include "dm_execution_engine_cpu.hpp"
 #include "dm.hpp"
 #include "dm_execution_engine_gpu.hpp"
+#include "dm_common.hpp"
 
 namespace deepmon {
     static DeepMon *dm;

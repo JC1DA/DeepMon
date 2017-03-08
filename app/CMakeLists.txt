@@ -30,7 +30,8 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_execution_engine_gpu.cpp
              ${source_DIR}/dm_execution_engine_cpu.cpp
              ${source_DIR}/dm_kernel_object.cpp
-             ${source_DIR}/dm_blob.cpp)
+             ${source_DIR}/dm_blob.cpp
+             ${source_DIR}/dm_im2col.cpp)
 
 target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
