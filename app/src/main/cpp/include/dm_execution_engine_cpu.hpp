@@ -18,7 +18,8 @@ namespace deepmon {
         void finalize_all_tasks();
         DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob);
         DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision);
-        void do_conv(DM_Blob *input, DM_Blob *output, DM_Blob *filters, DM_Blob *biases, std::vector<int> strides, std::vector<int> pads, std::vector<int> dilations);
+        void do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
+            std::vector<int> filters_sizes, std::vector<int> strides, std::vector<int> pads, std::vector<int> dilations);
     };
 }
 

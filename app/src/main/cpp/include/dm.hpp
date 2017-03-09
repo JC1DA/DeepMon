@@ -15,6 +15,7 @@
 #define DM_HPP
 
 #include "dm_execution_engine.hpp"
+#include "dm_common.hpp"
 #include <string>
 
 namespace deepmon {
@@ -26,9 +27,15 @@ namespace deepmon {
     public:
         DeepMon();
         DeepMon(std::string package_path);
-        DM_Execution_Engine *get_excution_engine(bool is_cpu_engine);
+        void create_memory(ENVIRONMENT_TYPE env_type, DM_Blob *blob, float *initialized_data);
         static DeepMon &Get();
         static DeepMon &Get(std::string package_path);
+        DM_Execution_Engine &get_execution_engine(bool is_getting_cpu_engine) {
+            if(is_getting_cpu_engine)
+                return *cpu_execution_engine;
+            else
+                return *gpu_execution_engine;
+        }
     };
 }
 

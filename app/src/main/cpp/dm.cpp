@@ -15,35 +15,26 @@ namespace deepmon {
     static DeepMon *dm;
 
     DeepMon::DeepMon() {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         this->cpu_execution_engine = new DM_Execution_Engine_CPU();
         this->gpu_execution_engine = new DM_Execution_Engine_GPU();
     }
 
     DeepMon::DeepMon(std::string package_path) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         this->cpu_execution_engine = new DM_Execution_Engine_CPU();
         this->gpu_execution_engine = new DM_Execution_Engine_GPU(package_path);
     }
 
-    DM_Execution_Engine* DeepMon::get_excution_engine(bool is_cpu_engine) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-        if(is_cpu_engine)
-            return this->cpu_execution_engine;
+    void DeepMon::create_memory(ENVIRONMENT_TYPE env_type, DM_Blob *blob,
+                                float *initialized_data) {
+        if(env_type == ENVIRONMENT_CPU)
+            this->cpu_execution_engine->create_memory(blob, initialized_data);
+        else if(env_type == ENVIRONMENT_GPU)
+            this->gpu_execution_engine->create_memory(blob, initialized_data);
         else
-            return this->gpu_execution_engine;
+            blob->set_corrupted(true);
     }
 
     DeepMon &DeepMon::Get() {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         if(dm == NULL) {
             dm = new DeepMon();
         }
@@ -52,9 +43,6 @@ namespace deepmon {
     }
 
     DeepMon &DeepMon::Get(std::string package_path) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         if(dm == NULL) {
             dm = new DeepMon(package_path);
         }

@@ -61,6 +61,12 @@ namespace deepmon {
         void set_gpu_data(cl_mem data) {
             this->gpu_data = data;
         }
+        int get_shape_at(int idx) {
+            if(idx < shapes.size())
+                return shapes.at(idx);
+            else
+                return 1;
+        }
     };
 
 }

@@ -28,7 +28,9 @@ namespace deepmon {
         virtual DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob) = 0;
         virtual DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision) = 0;
         virtual void finalize_all_tasks() = 0;
-        virtual void do_conv(DM_Blob *input, DM_Blob *output, DM_Blob *filters, DM_Blob *biases, std::vector<int> strides, std::vector<int> pads, std::vector<int> dilations) = 0;
+        virtual void do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
+            std::vector<int> filters_sizes, std::vector<int> strides, std::vector<int> pads, std::vector<int> dilations) = 0;
+        //virtual void do_conv(DM_Blob *input, DM_Blob *output, DM_Blob *filters, DM_Blob *biases, std::vector<int> strides, std::vector<int> pads, std::vector<int> dilations) = 0;
         //virtual void do_pooling(void *input, void *params, void *output);
         //virtual void do_fully_connected(void *input, void *params, void *output);
         //virtual void do_activation(void *input, void *params, void *output);

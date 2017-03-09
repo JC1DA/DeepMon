@@ -26,8 +26,8 @@ namespace deepmon {
     } PRESICION_TYPE;
 
     typedef enum {
-        DM_LAYOUT,
-        CAFFE_LAYOUT
+        MEMORY_LAYOUT_DM,
+        MEMORY_LAYOUT_CAFFE
     } MEMORY_LAYOUT;
 }
 

@@ -32,7 +32,7 @@ android {
     sourceSets {
         main {
             // let gradle pack the shared library into apk
-            jniLibs.srcDirs = ['../distribution/opencl/lib']
+            jniLibs.srcDirs = ['../distribution/opencl/lib', '../distribution/openblas/lib']
         }
     }
     externalNativeBuild {

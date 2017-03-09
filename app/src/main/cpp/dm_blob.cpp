@@ -3,12 +3,8 @@
 //
 
 #include <dm_blob.hpp>
-#include <vector>
 #include <dm_log.hpp>
-#include <string.h>
 #include <dm.hpp>
-#include "CL/cl.h"
-#include <dm_log.hpp>
 #include "dm_configs.hpp"
 
 namespace deepmon {
@@ -26,14 +22,7 @@ namespace deepmon {
         this->environment = evn;
         this->precision = precision_type;
 
-        if(this->environment == ENVIRONMENT_CPU) {
-            DeepMon::Get().get_excution_engine(true)->create_memory(this, initialized_data);
-        } else if(this->environment == ENVIRONMENT_GPU) {
-            DeepMon::Get().get_excution_engine(false)->create_memory(this, initialized_data);
-        } else {
-            LOGE("Unrecognized Environment !!!");
-            this->corrupted = true;
-        }
+        deepmon::DeepMon::Get().create_memory(evn, this, initialized_data);
     }
 
     DM_Blob::~DM_Blob() {

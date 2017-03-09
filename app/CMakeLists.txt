@@ -15,6 +15,8 @@ set(source_DIR ${CMAKE_SOURCE_DIR}/src/main/cpp)
 
 add_library(lib_opencl SHARED IMPORTED)
 set_target_properties( lib_opencl PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/opencl/lib/${ANDROID_ABI}/libGLES_mali.so )
+add_library(lib_openblas STATIC IMPORTED)
+set_target_properties( lib_openblas PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/openblas/lib/${ANDROID_ABI}/libopenblas.a )
 
 add_library( # Sets the name of the library.
              deepmon
@@ -31,9 +33,10 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_execution_engine_cpu.cpp
              ${source_DIR}/dm_kernel_object.cpp
              ${source_DIR}/dm_blob.cpp
+             ${source_DIR}/dm_utilities.cpp
              ${source_DIR}/dm_im2col.cpp)
 
-target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include)
+target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include ${distribution_DIR}/openblas/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -57,6 +60,7 @@ target_link_libraries( # Specifies the target library.
                        deepmon
 
                        lib_opencl
+                       lib_openblas
 
                        # Links the target library to the log library
                        # included in the NDK.

@@ -43,11 +43,4 @@ namespace deepmon {
     DM_Blob *DM_Execution_Engine_CPU::blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision){
         return NULL;
     }
-
-    void DM_Execution_Engine_CPU::do_conv(DM_Blob *input, DM_Blob *output, DM_Blob *filters,
-                                          DM_Blob *biases, std::vector<int> strides,
-                                          std::vector<int> pads, std::vector<int> dilations) {
-        //for performance, we always trust the input
-
-    }
 }

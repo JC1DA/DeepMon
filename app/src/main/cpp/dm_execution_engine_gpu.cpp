@@ -860,9 +860,8 @@ namespace deepmon {
             return NULL;
     }
 
-    void DM_Execution_Engine_GPU::do_conv(DM_Blob *input, DM_Blob *output, DM_Blob *filters,
-                                          DM_Blob *biases, std::vector<int> strides,
-                                          std::vector<int> pads, std::vector<int> dilations) {
+    void DM_Execution_Engine_GPU::do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
+            std::vector<int> filters_sizes, std::vector<int> strides, std::vector<int> pads, std::vector<int> dilations) {
 
     }
 }
