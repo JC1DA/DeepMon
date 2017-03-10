@@ -152,10 +152,9 @@ namespace deepmon {
         }
     }
 
-    void matrix_multiplcation(float *A, int A_width_, int A_height_,
+    void matrix_multiplication(float *A, int A_width_, int A_height_,
                               float *B, int B_width_, int B_height_,
-                              float *AB, bool tA, bool tB, float beta)
-    {
+                              float *AB, bool tA, bool tB, float beta) {
         int A_height = tA ? A_width_  : A_height_;
         int A_width  = tA ? A_height_ : A_width_;
         int B_height = tB ? B_width_  : B_height_;
@@ -163,8 +162,10 @@ namespace deepmon {
         int m = A_height;
         int n = B_width;
         int k = A_width;
+
         // Error, width and height should match!
         if(A_width != B_height) {
+            LOGE("Incorrect dimensions");
             return;
         }
 
@@ -185,7 +186,7 @@ namespace deepmon {
         for(int i = 0 ; i < N * K ; i++)
             b[i] = 1.0f;
         float *c = new float[M * K];
-        matrix_multiplcation(a,N,M,b,K,N,c,false,false,0);
+        matrix_multiplication(a,N,M,b,K,N,c,false,false,0);
         for(int i = 0 ; i < M * K ; i++) {
             if(c[i] != N) {
                 LOGE("Incorrect");

@@ -80,6 +80,9 @@ namespace deepmon {
         }
     }
 
+    /*
+     * Please note that all Blob inputs should be 4 dims-objects
+     */
     void DM_Execution_Engine_CPU::do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout,
                                             DM_Blob *input, DM_Blob *output,
                                             std::vector<int> filters_sizes,
@@ -95,40 +98,21 @@ namespace deepmon {
          * To get better performance, we should move these variables to layer class
          */
         int batches, channels, height, width, input_im_size, output_im_size, kernel_h, kernel_w;
-        if(input->get_shapes().size() == 4) {
-            batches = input->get_shape_at(0);
-            if(mem_layout == MEMORY_LAYOUT_CAFFE) {
-                channels = input->get_shape_at(1);
-                height = input->get_shape_at(2);
-                width = input->get_shape_at(3);
-                kernel_h = filters_sizes.at(2);
-                kernel_w = filters_sizes.at(3);
-            } else if(mem_layout == MEMORY_LAYOUT_DM) {
-                channels = input->get_shape_at(3);
-                height = input->get_shape_at(1);
-                width = input->get_shape_at(2);
-                kernel_h = filters_sizes.at(1);
-                kernel_w = filters_sizes.at(2);
-            }
-            input_im_size = input->get_shape_at(1) * input->get_shape_at(2) * input->get_shape_at(3);
-            output_im_size = output->get_shape_at(1) * output->get_shape_at(2) * output->get_shape_at(3);
-        } else {
-            batches = 1;
-            if(mem_layout == MEMORY_LAYOUT_CAFFE) {
-                channels = input->get_shape_at(0);
-                height = input->get_shape_at(1);
-                width = input->get_shape_at(2);
-                kernel_h = filters_sizes.at(2);
-                kernel_w = filters_sizes.at(3);
-            } else if(mem_layout == MEMORY_LAYOUT_DM) {
-                channels = input->get_shape_at(2);
-                height = input->get_shape_at(0);
-                width = input->get_shape_at(1);
-                kernel_h = filters_sizes.at(1);
-                kernel_w = filters_sizes.at(2);
-            }
-            input_im_size = input->get_shape_at(0) * input->get_shape_at(1) * input->get_shape_at(2);
-            output_im_size = output->get_shape_at(0) * output->get_shape_at(1) * output->get_shape_at(2);
+
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+            batches = input->get_shape_at(CAFFE_BLOB_INOUT_BATCH_IDX);
+            channels = input->get_shape_at(CAFFE_BLOB_INOUT_CHANNELS_IDX);
+            height = input->get_shape_at(CAFFE_BLOB_INOUT_HEIGHT_IDX);
+            width = input->get_shape_at(CAFFE_BLOB_INOUT_WIDTH_IDX);
+            kernel_h = filters_sizes.at(CAFFE_BLOB_FILTER_HEIGHT);
+            kernel_w = filters_sizes.at(CAFFE_BLOB_FILTER_WIDTH);
+        } else if(mem_layout == MEMORY_LAYOUT_DM) {
+            batches = input->get_shape_at(DM_BLOB_INOUT_BATCH_IDX);
+            channels = input->get_shape_at(DM_BLOB_INOUT_CHANNELS_IDX);
+            height = input->get_shape_at(DM_BLOB_INOUT_HEIGHT_IDX);
+            width = input->get_shape_at(DM_BLOB_INOUT_WIDTH_IDX);
+            kernel_h = filters_sizes.at(DM_BLOB_FILTER_HEIGHT);
+            kernel_w = filters_sizes.at(DM_BLOB_FILTER_WIDTH);
         }
 
         for(int b = 0 ; b < batches ; b++) {

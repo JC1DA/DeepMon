@@ -18,6 +18,9 @@ set_target_properties( lib_opencl PROPERTIES IMPORTED_LOCATION ${distribution_DI
 add_library(lib_openblas STATIC IMPORTED)
 set_target_properties( lib_openblas PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/openblas/lib/${ANDROID_ABI}/libopenblas.a )
 
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -Xlinker --no-warn-mismatch -O2 -mfpu=vfpv3-d16 -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -march=armv7-a -mfloat-abi=hard")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Xlinker --no-warn-mismatch -O2 -mfpu=vfpv3-d16 -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -march=armv7-a -mfloat-abi=hard -std=gnu++11")
+
 add_library( # Sets the name of the library.
              deepmon
 
@@ -34,7 +37,8 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_kernel_object.cpp
              ${source_DIR}/dm_blob.cpp
              ${source_DIR}/dm_utilities.cpp
-             ${source_DIR}/dm_im2col.cpp)
+             ${source_DIR}/dm_im2col.cpp
+             ${source_DIR}/dm_conv.cpp)
 
 target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include ${distribution_DIR}/openblas/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
