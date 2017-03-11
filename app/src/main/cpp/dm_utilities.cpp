@@ -194,4 +194,86 @@ namespace deepmon {
             }
         }
     }
+
+    void test_conv_cpu() {
+        MEMORY_LAYOUT mem_layout = MEMORY_LAYOUT_CAFFE;
+
+        int batches = 1;
+        int input_channels = 2;
+        int input_h = 3;
+        int input_w = 3;
+
+        int num_filters = 2;
+        int filter_h = 3;
+        int filter_w = 3;
+
+        int pad_top = 1;
+        int pad_left = 1;
+        int pad_bottom = 1;
+        int pad_right = 1;
+
+        std::vector<int> pads({pad_top,pad_left,pad_bottom,pad_right});
+        std::vector<int> strides({1,1});
+        std::vector<int> dilations({1,1});
+
+        float *filters_data = new float[num_filters * input_channels * filter_h * filter_w];
+        for(int i = 0 ; i < num_filters * input_channels * filter_h * filter_w ; i++)
+            filters_data[i] = 1;
+        //filters_data[0] = 1;
+
+        //create filters
+        std::vector<int> filters_shapes;
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+            filters_shapes.push_back(num_filters);
+            filters_shapes.push_back(input_channels);
+            filters_shapes.push_back(filter_h);
+            filters_shapes.push_back(filter_w);
+        } else if(mem_layout == MEMORY_LAYOUT_DM) {
+            filters_shapes.push_back(num_filters);
+            filters_shapes.push_back(filter_h);
+            filters_shapes.push_back(filter_w);
+            filters_shapes.push_back(input_channels);
+        }
+        DM_Blob *filters = new DM_Blob(filters_shapes, ENVIRONMENT_CPU, PRECISION_32, filters_data);
+
+        //create input
+        int input_size = input_channels * input_h * input_w;
+        float *input_data = new float[input_size];
+
+        for(int i = 0 ; i < input_size ; i++)
+            input_data[i] = (float)1;
+
+        DM_Blob *input = NULL;
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+            input = new DM_Blob(
+                    std::vector<int>({batches,input_channels,input_h,input_w}),
+                    ENVIRONMENT_CPU,
+                    PRECISION_32, input_data);
+        } else if(mem_layout == MEMORY_LAYOUT_DM) {
+            input = new DM_Blob(
+                    std::vector<int>({batches,input_h,input_w,input_channels}),
+                    ENVIRONMENT_CPU,
+                    PRECISION_32, input_data);
+        }
+
+        int output_h = (input_h + pad_top + pad_bottom - (dilations.at(0) * (filter_h - 1) + 1)) / strides.at(0) + 1;
+        int output_w = (input_w + pad_left + pad_right - (dilations.at(1) * (filter_w - 1) + 1)) / strides.at(1) + 1;
+
+        DM_Blob *output = NULL;
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+            output = new DM_Blob(
+                    std::vector<int>({batches,num_filters, output_h, output_w}),
+                    ENVIRONMENT_CPU,
+                    PRECISION_32, NULL);
+        } else {
+            output = new DM_Blob(
+                    std::vector<int>({batches,output_h, output_w, num_filters}),
+                    ENVIRONMENT_CPU,
+                    PRECISION_32, NULL);
+        }
+
+        DeepMon::Get().get_execution_engine(true).do_conv(mem_layout, input, output, filters, NULL, strides, pads, dilations);
+
+        output->print_blob();
+    }
 }

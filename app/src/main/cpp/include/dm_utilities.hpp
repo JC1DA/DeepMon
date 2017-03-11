@@ -10,6 +10,7 @@ namespace deepmon {
 	void matrix_multiplication(float *A, int A_width_, int A_height_,
 							   float *B, int B_width_, int B_height_,
 							   float *AB, bool tA, bool tB, float beta);
+    void test_conv_cpu();
 }
 
 #endif

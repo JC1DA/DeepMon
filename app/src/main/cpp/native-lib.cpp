@@ -40,5 +40,6 @@ Java_com_lanytek_deepmon_MainActivity_testDeepMonWithPackageName(
     DeepMon dm = DeepMon::Get(package_path);
 
     //test_im2col(dm);
-    test_openblas();
+    //test_openblas();
+    test_conv_cpu();
 }

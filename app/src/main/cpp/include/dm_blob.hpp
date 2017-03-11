@@ -4,6 +4,7 @@
 #include <vector>
 #include <CL/cl.h>
 #include "dm_common.hpp"
+#include "dm_log.hpp"
 
 namespace deepmon {
     class DM_Blob {
@@ -66,6 +67,40 @@ namespace deepmon {
                 return shapes.at(idx);
             else
                 return 1;
+        }
+        void print_blob() {
+            if(this->shapes.size() == 4) {
+                for(int i = 0 ; i < shapes.at(0) ; i++) {
+                    for(int j = 0 ; j < shapes.at(1) ; j++) {
+                        for(int k = 0 ; k < shapes.at(2) ; k++) {
+                            for(int z = 0 ; z < shapes.at(3) ; z++) {
+                                int idx = ((i * shapes.at(1) + j) * shapes.at(2) + k) * shapes.at(3) + z;
+                                LOGD("[%d,%d,%d,%d]: %f", i, j, k, z, cpu_data[idx]);
+                            }
+                        }
+                    }
+                }
+            } else if(this->shapes.size() == 3) {
+                for(int i = 0 ; i < shapes.at(0) ; i++) {
+                    for(int j = 0 ; j < shapes.at(1) ; j++) {
+                        for(int k = 0 ; k < shapes.at(2) ; k++) {
+                            int idx = ((i * shapes.at(1) + j) * shapes.at(2) + k);
+                            LOGD("[%d,%d,%d]: %f", i, j, k, cpu_data[idx]);
+                        }
+                    }
+                }
+            } else if(this->shapes.size() == 2) {
+                for(int i = 0 ; i < shapes.at(0) ; i++) {
+                    for(int j = 0 ; j < shapes.at(1) ; j++) {
+                        int idx = (i * shapes.at(1) + j);
+                        LOGD("[%d,%d]: %f", i, j, cpu_data[idx]);
+                    }
+                }
+            } else if(this->shapes.size() == 1) {
+                for(int i = 0 ; i < shapes.at(0) ; i++) {
+                    LOGD("[%d]: %f", i, cpu_data[i]);
+                }
+            }
         }
     };
 

@@ -4,6 +4,7 @@
 
 #include <dm.hpp>
 #include <dm_execution_engine_gpu.hpp>
+#include <cblas.h>
 #include "dm_execution_engine_cpu.hpp"
 #include "dm_common.hpp"
 #include "dm_utilities.hpp"
@@ -36,7 +37,6 @@ namespace deepmon {
 
         //create blob for im2col_data
         std::vector<int> im2col_shapes;
-        im2col_shapes.push_back(batches);
         if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             im2col_shapes.push_back(batches);
             im2col_shapes.push_back(channels * kernel_h * kernel_w);
@@ -50,30 +50,51 @@ namespace deepmon {
         }
         DM_Blob *im2col_blob = new DM_Blob(im2col_shapes, ENVIRONMENT_CPU, PRECISION_32, NULL);
 
-        DeepMon::Get().get_execution_engine(true).do_im2col(ENVIRONMENT_CPU, mem_layout, input, output, filters->get_shapes(), strides, pads, dilations);
+        DeepMon::Get().get_execution_engine(true).do_im2col(ENVIRONMENT_CPU, mem_layout, input, im2col_blob, filters->get_shapes(), strides, pads, dilations);
+
+        im2col_blob->print_blob();
 
         //run gemm to get results
         int input_offset = im2col_blob->get_shape_at(1) * im2col_blob->get_shape_at(2) * im2col_blob->get_shape_at(3);
         int output_offset = output->get_shape_at(1) * output->get_shape_at(2) * output->get_shape_at(3);
 
         int m,n,k;
-        bool tA = false, tB = false;
         if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             m = filters->get_shape_at(CAFFE_BLOB_FILTER_NUM_FILTERS);
-            n = im2col_blob->get_shape_at(1);
-            k = output->get_shape_at(CAFFE_BLOB_INOUT_HEIGHT_IDX) * output->get_shape_at(CAFFE_BLOB_FILTER_WIDTH);
+            k = im2col_blob->get_shape_at(1);
+            n = output->get_shape_at(CAFFE_BLOB_INOUT_HEIGHT_IDX) * output->get_shape_at(CAFFE_BLOB_FILTER_WIDTH);
         } else if(mem_layout == MEMORY_LAYOUT_DM) {
             m = filters->get_shape_at(DM_BLOB_FILTER_NUM_FILTERS);
-            n = im2col_blob->get_shape_at(3);
-            k = output->get_shape_at(DM_BLOB_INOUT_HEIGHT_IDX) * output->get_shape_at(DM_BLOB_INOUT_WIDTH_IDX);
-            tB = true;
+            k = im2col_blob->get_shape_at(3);
+            n = output->get_shape_at(DM_BLOB_INOUT_HEIGHT_IDX) * output->get_shape_at(DM_BLOB_INOUT_WIDTH_IDX);
         }
 
         for(int b = 0 ; b < batches ; b++) {
             float *data_im = im2col_blob->get_cpu_data() + b * input_offset;
             float *output_im = output->get_cpu_data() + b * output_offset;
-            matrix_multiplication(filters->get_cpu_data(), n, m, \
-                                    data_im, k, n, output->get_cpu_data(), tA, tB, 0);
+            /*matrix_multiplication(filters->get_cpu_data(), n, m, \
+                                    data_im, k, n, output_im, tA, tB, 0);*/
+
+            if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+                cblas_sgemm(CblasRowMajor,
+                            CblasNoTrans,
+                            CblasNoTrans,
+                            m, n, k,
+                            1.0f,
+                            filters->get_cpu_data(), k,
+                            data_im, n,
+                            0, output_im, n);
+            } else if(mem_layout == MEMORY_LAYOUT_DM) {
+                cblas_sgemm(CblasRowMajor,
+                            CblasNoTrans,
+                            CblasTrans,
+                            n, m, k,
+                            1.0f,
+                            data_im, k,
+                            filters->get_cpu_data(), k,
+                            0, output_im, m);
+            }
+
         }
     }
 
