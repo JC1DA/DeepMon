@@ -196,7 +196,7 @@ namespace deepmon {
     }
 
     void test_conv_cpu() {
-        MEMORY_LAYOUT mem_layout = MEMORY_LAYOUT_CAFFE;
+        MEMORY_LAYOUT mem_layout = MEMORY_LAYOUT_DM;
 
         int batches = 1;
         int input_channels = 2;
@@ -272,7 +272,13 @@ namespace deepmon {
                     PRECISION_32, NULL);
         }
 
-        DeepMon::Get().get_execution_engine(true).do_conv(mem_layout, input, output, filters, NULL, strides, pads, dilations);
+        //create biases
+        float *biases_data = new float[num_filters];
+        for(int i = 0 ; i < num_filters ; i++)
+            biases_data[i] = 1;
+        DM_Blob *biases = new DM_Blob(std::vector<int>({num_filters}), ENVIRONMENT_CPU, PRECISION_32, biases_data);
+
+        DeepMon::Get().get_execution_engine(true).do_conv(mem_layout, input, output, filters, biases, strides, pads, dilations);
 
         output->print_blob();
     }

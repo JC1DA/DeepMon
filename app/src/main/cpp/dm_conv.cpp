@@ -52,7 +52,7 @@ namespace deepmon {
 
         DeepMon::Get().get_execution_engine(true).do_im2col(ENVIRONMENT_CPU, mem_layout, input, im2col_blob, filters->get_shapes(), strides, pads, dilations);
 
-        im2col_blob->print_blob();
+        //im2col_blob->print_blob();
 
         //run gemm to get results
         int input_offset = im2col_blob->get_shape_at(1) * im2col_blob->get_shape_at(2) * im2col_blob->get_shape_at(3);
@@ -67,6 +67,13 @@ namespace deepmon {
             m = filters->get_shape_at(DM_BLOB_FILTER_NUM_FILTERS);
             k = im2col_blob->get_shape_at(3);
             n = output->get_shape_at(DM_BLOB_INOUT_HEIGHT_IDX) * output->get_shape_at(DM_BLOB_INOUT_WIDTH_IDX);
+        }
+
+        float *biases_multiplier = NULL;
+        if(biases != NULL) {
+            biases_multiplier = new float[n];
+            for(int i = 0 ; i < n ; i++)
+                biases_multiplier[i] = 1;
         }
 
         for(int b = 0 ; b < batches ; b++) {
@@ -84,6 +91,14 @@ namespace deepmon {
                             filters->get_cpu_data(), k,
                             data_im, n,
                             0, output_im, n);
+                if(biases != NULL) {
+                    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                    biases->get_shape_at(0), n, 1,
+                    1.0f,
+                    biases->get_cpu_data(), 1,
+                    biases_multiplier, n,
+                    1.0, output_im, n);
+                }
             } else if(mem_layout == MEMORY_LAYOUT_DM) {
                 cblas_sgemm(CblasRowMajor,
                             CblasNoTrans,
@@ -93,9 +108,20 @@ namespace deepmon {
                             data_im, k,
                             filters->get_cpu_data(), k,
                             0, output_im, m);
+                if(biases != NULL) {
+                    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                                n, biases->get_shape_at(0), 1,
+                                1.0f,
+                                biases_multiplier, 1,
+                                biases->get_cpu_data(), biases->get_shape_at(0),
+                                1.0, output_im, biases->get_shape_at(0));
+                }
             }
 
         }
+
+        if(biases_multiplier != NULL)
+            delete biases_multiplier;
     }
 
     void DM_Execution_Engine_GPU::do_conv(MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output,
