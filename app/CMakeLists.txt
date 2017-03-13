@@ -38,7 +38,8 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_blob.cpp
              ${source_DIR}/dm_utilities.cpp
              ${source_DIR}/dm_im2col.cpp
-             ${source_DIR}/dm_conv.cpp)
+             ${source_DIR}/dm_conv.cpp
+             ${source_DIR}/dm_layer.cpp)
 
 target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include ${distribution_DIR}/openblas/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
