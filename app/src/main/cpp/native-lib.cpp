@@ -3,6 +3,7 @@
 #include <dm.hpp>
 #include <dm_log.hpp>
 #include "dm_utilities.hpp"
+#include "dm_net.hpp"
 
 using namespace deepmon;
 
@@ -41,5 +42,19 @@ Java_com_lanytek_deepmon_MainActivity_testDeepMonWithPackageName(
 
     //test_im2col(dm);
     //test_openblas();
-    test_conv_cpu();
+    //test_conv_cpu();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+        Java_com_lanytek_deepmon_MainActivity_testLoadNet(
+                JNIEnv* env,
+                jobject thisobj/* this */,
+                jstring model_dir_path) {
+    const char *model_dir_path_str = env->GetStringUTFChars(model_dir_path, 0);
+    std::string path(model_dir_path_str);
+    env->ReleaseStringUTFChars(model_dir_path, model_dir_path_str);
+
+    DM_Net *net = new DM_Net(path);
+    net->PrintNet();
 }

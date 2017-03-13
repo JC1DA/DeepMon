@@ -14,6 +14,8 @@
 #ifndef DM_COMMON_HPP
 #define DM_COMMON_HPP
 
+#include <string.h>
+
 namespace deepmon {
     typedef enum {
         ENVIRONMENT_CPU,
@@ -57,6 +59,16 @@ namespace deepmon {
         DM_BLOB_FILTER_WIDTH,
         DM_BLOB_FILTER_NUM_CHANNELS,
     } DM_BLOB_FILTER_IDX;
+
+#define CONV_NAME       "CONV"
+#define POOLING_NAME    "POOLING"
+#define FC_NAME         "FULLY_CONNECTED"
+#define SOFTMAX_NAME    "SOFTMAX"
+
+    inline bool CMP_OPTION(char *str, const char *option) {
+        bool ret = strncmp(str, option, strlen(option)) == 0 ? true : false;
+        return ret;
+    }
 }
 
 #endif /* DM_COMMON_HPP */

@@ -1,29 +1,58 @@
 #ifndef DM_LAYER_PARAM_HPP
 #define DM_LAYER_PARAM_HPP
 
+using namespace std;
+
 namespace deepmon {
     class DM_Layer_Param {
     private:
-        std::string name;
-        std::string conf_path;
-        std::string weights_path;
+        MEMORY_LAYOUT layout;
+        string name;
+        string type;
+        string model_dir_path;
+        string conf_path;
+        string weights_path;
     public:
 
-        explicit DM_Layer_Param(std::string name, std::string conf_path, std::string weights_path) {
+        explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path) {
             this->name = name;
+            this->type = type;
+            this->model_dir_path = model_dir_path;
             this->conf_path = conf_path;
             this->weights_path = weights_path;
+            this->layout = MEMORY_LAYOUT_DM;
         }
 
-        std::string get_name() {
+        explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path, bool use_dm_layout) {
+            this->name = name;
+            this->type = type;
+            this->model_dir_path = model_dir_path;
+            this->conf_path = conf_path;
+            this->weights_path = weights_path;
+            this->layout = use_dm_layout ? MEMORY_LAYOUT_DM : MEMORY_LAYOUT_CAFFE;
+        }
+
+        string GetName() {
             return this->name;
         }
-        std::string get_conf_path() {
-            return this->conf_path;
+        string GetType() {
+            return this->type;
         }
-        std::string get_weight_path() {
-            return this->weights_path;
+        string GetConfPath() {
+            return model_dir_path + "/" + conf_path;
+        }
+        string GetWeightsPath() {
+            return model_dir_path + "/" + weights_path;
         };
+        MEMORY_LAYOUT GetMemoryLayout() {
+            return layout;
+        }
+        void PrintLayerParam() {
+            LOGD("Layer's Name: %s", name.c_str());
+            LOGD("\tTYPE: %s", type.c_str());
+            LOGD("\tCONF_FILE: %s", conf_path.c_str());
+            LOGD("\tWEIGHTS_FILE: %s", weights_path.c_str());
+        }
     };
 }
 

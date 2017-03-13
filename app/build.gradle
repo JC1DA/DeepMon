@@ -14,7 +14,7 @@ android {
             cmake {
                 cppFlags "-std=c++11"
                 arguments "-DANDROID_STL=gnustl_static"
-                arguments "-DANDROID_TOOLCHAIN=gcc"
+                //arguments "-DANDROID_TOOLCHAIN=gcc"
             }
         }
         ndk {
@@ -32,7 +32,7 @@ android {
     sourceSets {
         main {
             // let gradle pack the shared library into apk
-            jniLibs.srcDirs = ['../distribution/opencl/lib', '../distribution/openblas/lib']
+            jniLibs.srcDirs = ['../distribution/opencl/lib', '../distribution/openblas/lib', '../distribution/jsoncpp/lib']
         }
     }
     externalNativeBuild {

@@ -7,7 +7,7 @@
 using namespace deepmon;
 namespace deepmon {
 
-    DM_Layer::DM_Layer(DM_Layer_Param &param) {
+    DM_Layer::DM_Layer() {
 
     }
 }

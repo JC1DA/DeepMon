@@ -15,6 +15,8 @@ set(source_DIR ${CMAKE_SOURCE_DIR}/src/main/cpp)
 
 add_library(lib_opencl SHARED IMPORTED)
 set_target_properties( lib_opencl PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/opencl/lib/${ANDROID_ABI}/libGLES_mali.so )
+add_library(lib_jsoncpp SHARED IMPORTED)
+set_target_properties( lib_jsoncpp PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/jsoncpp/lib/${ANDROID_ABI}/libjsoncpp.so )
 add_library(lib_openblas STATIC IMPORTED)
 set_target_properties( lib_openblas PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/openblas/lib/${ANDROID_ABI}/libopenblas.a )
 
@@ -39,9 +41,11 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_utilities.cpp
              ${source_DIR}/dm_im2col.cpp
              ${source_DIR}/dm_conv.cpp
-             ${source_DIR}/dm_layer.cpp)
+             ${source_DIR}/dm_net.cpp
+             ${source_DIR}/dm_layer.cpp
+             ${source_DIR}/dm_layer_conv.cpp)
 
-target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include ${distribution_DIR}/openblas/include)
+target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include ${distribution_DIR}/openblas/include ${distribution_DIR}/jsoncpp/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -66,6 +70,7 @@ target_link_libraries( # Specifies the target library.
 
                        lib_opencl
                        lib_openblas
+                       lib_jsoncpp
 
                        # Links the target library to the log library
                        # included in the NDK.

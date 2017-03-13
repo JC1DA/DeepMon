@@ -3,6 +3,7 @@ package com.lanytek.deepmon;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Activity activity = this;
     private Button btn_Init;
+    private Button btn_Read_Net;
 
     static {
         System.loadLibrary("deepmon");
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         btn_Init = (Button) findViewById(R.id.btn_Init);
+        btn_Read_Net = (Button) findViewById(R.id.btn_read_net);
 
         btn_Init.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -37,6 +40,14 @@ public class MainActivity extends AppCompatActivity {
                 Utilities.copyFile(activity, "im2col.cl");
                 Utilities.copyFile(activity, "conv.cl");
                 testDeepMonWithPackageName(activity.getPackageName().toString());
+            }
+        });
+
+        btn_Read_Net.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DeepMonModel";
+                testLoadNet(path);
             }
         });
 
@@ -74,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
     public native String stringFromJNI();
     public native void testDeepMon();
     public native void testDeepMonWithPackageName(String package_name);
+    public native void testLoadNet(String model_dir_path);
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
