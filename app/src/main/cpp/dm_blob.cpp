@@ -8,14 +8,14 @@
 #include "dm_configs.hpp"
 
 namespace deepmon {
-    DM_Blob::DM_Blob(std::vector<int> shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data) {
+    DM_Blob::DM_Blob(std::vector<uint32_t > shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data) {
 #ifdef PRINT_FUNCTION_NAME
         LOGD("--%s--", __PRETTY_FUNCTION__);
 #endif
         this->cpu_data = NULL;
         this->gpu_data = NULL;
         this->size = 1;
-        for(std::vector<int>::iterator it = shapes.begin() ; it != shapes.end() ; it++) {
+        for(std::vector<uint32_t >::iterator it = shapes.begin() ; it != shapes.end() ; it++) {
             this->shapes.push_back(*it);
             this->size *= *it;
         }

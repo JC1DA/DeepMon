@@ -7,11 +7,11 @@
 #include "dm_execution_engine_gpu.hpp"
 
 namespace deepmon {
-    void CAFFE_LAYOUT_im2col_cpu(const float *data_im, const int channels, const int height,
-                                 const int width, const int kernel_h, const int kernel_w,
-                                 const int pad_h, const int pad_w, const int stride_h,
-                                 const int stride_w, const int dilation_h,
-                                 const int dilation_w, float *data_col) {
+    void CAFFE_LAYOUT_im2col_cpu(const float *data_im, const uint32_t channels, const uint32_t height,
+                                 const uint32_t width, const uint32_t kernel_h, const uint32_t kernel_w,
+                                 const uint32_t pad_h, const uint32_t pad_w, const uint32_t stride_h,
+                                 const uint32_t stride_w, const uint32_t dilation_h,
+                                 const uint32_t dilation_w, float *data_col) {
         const int output_h = (height + 2 * pad_h
                               - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
         const int output_w =
@@ -85,9 +85,9 @@ namespace deepmon {
      */
     void DM_Execution_Engine_CPU::do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout,
                                             DM_Blob *input, DM_Blob *output,
-                                            std::vector<int> filters_sizes,
-                                            std::vector<int> strides, std::vector<int> pads,
-                                            std::vector<int> dilations) {
+                                            std::vector<uint32_t> filters_sizes,
+                                            std::vector<uint32_t> strides, std::vector<uint32_t> pads,
+                                            std::vector<uint32_t> dilations) {
         if(evn_type != ENVIRONMENT_CPU) {
             output->set_corrupted(true);
             LOGE("Incorrect Environment");

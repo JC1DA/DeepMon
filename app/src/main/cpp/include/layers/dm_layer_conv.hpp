@@ -16,6 +16,7 @@ namespace deepmon {
         vector<uint32_t> dilations;
 
         bool has_bias = false;
+        vector<uint32_t> filters_shapes;
         DM_Blob *filters;
         DM_Blob *biases;
     protected:

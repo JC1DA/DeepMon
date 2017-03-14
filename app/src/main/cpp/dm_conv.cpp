@@ -14,8 +14,8 @@ using namespace deepmon;
 namespace deepmon {
     void DM_Execution_Engine_CPU::do_conv(MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output,
                                           DM_Blob *filters, DM_Blob *biases,
-                                          std::vector<int> strides, std::vector<int> pads,
-                                          std::vector<int> dilations) {
+                                          std::vector<uint32_t> strides, std::vector<uint32_t> pads,
+                                          std::vector<uint32_t> dilations) {
         //should move outside for performance
         int batches, channels, height, width, input_im_size, output_im_size, kernel_h, kernel_w;
 
@@ -36,7 +36,7 @@ namespace deepmon {
         }
 
         //create blob for im2col_data
-        std::vector<int> im2col_shapes;
+        std::vector<uint32_t> im2col_shapes;
         if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             im2col_shapes.push_back(batches);
             im2col_shapes.push_back(channels * kernel_h * kernel_w);
@@ -126,8 +126,8 @@ namespace deepmon {
 
     void DM_Execution_Engine_GPU::do_conv(MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output,
                                           DM_Blob *filters, DM_Blob *biases,
-                                          std::vector<int> strides, std::vector<int> pads,
-                                          std::vector<int> dilations) {
+                                          std::vector<uint32_t> strides, std::vector<uint32_t> pads,
+                                          std::vector<uint32_t> dilations) {
 
     }
 }

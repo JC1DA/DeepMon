@@ -45,7 +45,8 @@ namespace deepmon {
                 const std::vector<DM_Blob *> &top
         ) = 0;
 
-		ENVIRONMENT_TYPE env;
+		ENVIRONMENT_TYPE env = ENVIRONMENT_CPU;
+        PRESICION_TYPE precision = PRECISION_32;
         bool corrupted = false;
         vector<DM_Blob *> bottom_blobs; //only store references
         vector<DM_Blob *> top_blobs; //store physical blobs

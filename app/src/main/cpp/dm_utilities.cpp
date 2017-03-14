@@ -11,48 +11,48 @@ using namespace deepmon;
 
 namespace deepmon {
     void test_im2col(DeepMon &dm) {
-        int num_filters = 3;
-        int num_channels = 2;
-        int filter_h = 3;
-        int filter_w = 3;
-        int input_h = 3;
-        int input_w = 3;
-        int pad_top = 1;
-        int pad_left = 1;
-        int pad_bottom = 1;
-        int pad_right = 1;
+        uint32_t num_filters = 3;
+        uint32_t num_channels = 2;
+        uint32_t filter_h = 3;
+        uint32_t filter_w = 3;
+        uint32_t input_h = 3;
+        uint32_t input_w = 3;
+        uint32_t pad_top = 1;
+        uint32_t pad_left = 1;
+        uint32_t pad_bottom = 1;
+        uint32_t pad_right = 1;
 
-        std::vector<int> caffe_filters_shapes({num_filters, num_channels, filter_h, filter_w});
-        std::vector<int> dm_filters_shapes({num_filters, filter_h, filter_w, num_channels});
-        std::vector<int> pads({pad_top,pad_left,pad_bottom,pad_right});
-        std::vector<int> strides({1,1});
-        std::vector<int> dilations({1,1});
+        std::vector<uint32_t> caffe_filters_shapes({num_filters, num_channels, filter_h, filter_w});
+        std::vector<uint32_t> dm_filters_shapes({num_filters, filter_h, filter_w, num_channels});
+        std::vector<uint32_t> pads({pad_top,pad_left,pad_bottom,pad_right});
+        std::vector<uint32_t> strides({1,1});
+        std::vector<uint32_t> dilations({1,1});
 
-        int input_size = num_channels * input_h * input_w;
+        uint32_t input_size = num_channels * input_h * input_w;
         float *input_data = new float[input_size];
 
         for(int i = 0 ; i < input_size ; i++)
             input_data[i] = (float)i;
 
         DM_Blob *caffe_input = new DM_Blob(
-                std::vector<int>({num_channels,input_h,input_w}),
+                std::vector<uint32_t>({num_channels,input_h,input_w}),
                 ENVIRONMENT_CPU,
                 PRECISION_32, input_data);
 
         DM_Blob *dm_input = new DM_Blob(
-                std::vector<int>({input_h,input_w,num_channels}),
+                std::vector<uint32_t>({input_h,input_w,num_channels}),
                 ENVIRONMENT_CPU,
                 PRECISION_32, input_data);
 
-        int output_h = (input_h + pad_top + pad_bottom - (dilations.at(0) * (filter_h - 1) + 1)) / strides.at(0) + 1;
-        int output_w = (input_w + pad_left + pad_right - (dilations.at(1) * (filter_w - 1) + 1)) / strides.at(1) + 1;
+        uint32_t output_h = (input_h + pad_top + pad_bottom - (dilations.at(0) * (filter_h - 1) + 1)) / strides.at(0) + 1;
+        uint32_t output_w = (input_w + pad_left + pad_right - (dilations.at(1) * (filter_w - 1) + 1)) / strides.at(1) + 1;
 
         DM_Blob *caffe_output = new DM_Blob(
-                std::vector<int>({num_channels * filter_h * filter_w, output_h, output_w}),
+                std::vector<uint32_t>({num_channels * filter_h * filter_w, output_h, output_w}),
                 ENVIRONMENT_CPU,
                 PRECISION_32, NULL);
         DM_Blob *dm_output = new DM_Blob(
-                std::vector<int>({output_h, output_w, num_channels * filter_h * filter_w}),
+                std::vector<uint32_t>({output_h, output_w, num_channels * filter_h * filter_w}),
                 ENVIRONMENT_CPU,
                 PRECISION_32, NULL);
 
@@ -198,23 +198,23 @@ namespace deepmon {
     void test_conv_cpu() {
         MEMORY_LAYOUT mem_layout = MEMORY_LAYOUT_DM;
 
-        int batches = 1;
-        int input_channels = 2;
-        int input_h = 3;
-        int input_w = 3;
+        uint32_t batches = 1;
+        uint32_t input_channels = 2;
+        uint32_t input_h = 3;
+        uint32_t input_w = 3;
 
-        int num_filters = 2;
-        int filter_h = 3;
-        int filter_w = 3;
+        uint32_t num_filters = 2;
+        uint32_t filter_h = 3;
+        uint32_t filter_w = 3;
 
-        int pad_top = 1;
-        int pad_left = 1;
-        int pad_bottom = 1;
-        int pad_right = 1;
+        uint32_t pad_top = 1;
+        uint32_t pad_left = 1;
+        uint32_t pad_bottom = 1;
+        uint32_t pad_right = 1;
 
-        std::vector<int> pads({pad_top,pad_left,pad_bottom,pad_right});
-        std::vector<int> strides({1,1});
-        std::vector<int> dilations({1,1});
+        std::vector<uint32_t> pads({pad_top,pad_left,pad_bottom,pad_right});
+        std::vector<uint32_t> strides({1,1});
+        std::vector<uint32_t> dilations({1,1});
 
         float *filters_data = new float[num_filters * input_channels * filter_h * filter_w];
         for(int i = 0 ; i < num_filters * input_channels * filter_h * filter_w ; i++)
@@ -222,7 +222,7 @@ namespace deepmon {
         //filters_data[0] = 1;
 
         //create filters
-        std::vector<int> filters_shapes;
+        std::vector<uint32_t> filters_shapes;
         if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             filters_shapes.push_back(num_filters);
             filters_shapes.push_back(input_channels);
@@ -246,28 +246,28 @@ namespace deepmon {
         DM_Blob *input = NULL;
         if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             input = new DM_Blob(
-                    std::vector<int>({batches,input_channels,input_h,input_w}),
+                    std::vector<uint32_t>({batches,input_channels,input_h,input_w}),
                     ENVIRONMENT_CPU,
                     PRECISION_32, input_data);
         } else if(mem_layout == MEMORY_LAYOUT_DM) {
             input = new DM_Blob(
-                    std::vector<int>({batches,input_h,input_w,input_channels}),
+                    std::vector<uint32_t>({batches,input_h,input_w,input_channels}),
                     ENVIRONMENT_CPU,
                     PRECISION_32, input_data);
         }
 
-        int output_h = (input_h + pad_top + pad_bottom - (dilations.at(0) * (filter_h - 1) + 1)) / strides.at(0) + 1;
-        int output_w = (input_w + pad_left + pad_right - (dilations.at(1) * (filter_w - 1) + 1)) / strides.at(1) + 1;
+        uint32_t output_h = (input_h + pad_top + pad_bottom - (dilations.at(0) * (filter_h - 1) + 1)) / strides.at(0) + 1;
+        uint32_t output_w = (input_w + pad_left + pad_right - (dilations.at(1) * (filter_w - 1) + 1)) / strides.at(1) + 1;
 
         DM_Blob *output = NULL;
         if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             output = new DM_Blob(
-                    std::vector<int>({batches,num_filters, output_h, output_w}),
+                    std::vector<uint32_t>({batches,num_filters, output_h, output_w}),
                     ENVIRONMENT_CPU,
                     PRECISION_32, NULL);
         } else {
             output = new DM_Blob(
-                    std::vector<int>({batches,output_h, output_w, num_filters}),
+                    std::vector<uint32_t>({batches,output_h, output_w, num_filters}),
                     ENVIRONMENT_CPU,
                     PRECISION_32, NULL);
         }
@@ -276,7 +276,7 @@ namespace deepmon {
         float *biases_data = new float[num_filters];
         for(int i = 0 ; i < num_filters ; i++)
             biases_data[i] = 1;
-        DM_Blob *biases = new DM_Blob(std::vector<int>({num_filters}), ENVIRONMENT_CPU, PRECISION_32, biases_data);
+        DM_Blob *biases = new DM_Blob(std::vector<uint32_t>({num_filters}), ENVIRONMENT_CPU, PRECISION_32, biases_data);
 
         DeepMon::Get().get_execution_engine(true).do_conv(mem_layout, input, output, filters, biases, strides, pads, dilations);
 

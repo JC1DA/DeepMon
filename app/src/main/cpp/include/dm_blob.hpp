@@ -9,7 +9,7 @@
 namespace deepmon {
     class DM_Blob {
     private:
-        std::vector<int> shapes;
+        std::vector<uint32_t> shapes;
         ENVIRONMENT_TYPE environment;
         PRESICION_TYPE precision;
 
@@ -21,7 +21,7 @@ namespace deepmon {
         cl_mem gpu_data;
 
     public:
-        DM_Blob(std::vector<int> shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data);
+        DM_Blob(std::vector<uint32_t> shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data);
         ~DM_Blob();
         ENVIRONMENT_TYPE get_env() {
             return this->environment;
@@ -29,8 +29,8 @@ namespace deepmon {
         PRESICION_TYPE get_precision() {
             return this->precision;
         }
-        std::vector<int> get_shapes() {
-            return std::vector<int>(this->shapes);
+        std::vector<uint32_t> get_shapes() {
+            return std::vector<uint32_t>(this->shapes);
         }
         int get_size() {
             return this->size;
