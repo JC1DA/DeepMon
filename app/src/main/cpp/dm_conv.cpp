@@ -6,8 +6,6 @@
 #include <dm_execution_engine_gpu.hpp>
 #include <cblas.h>
 #include "dm_execution_engine_cpu.hpp"
-#include "dm_common.hpp"
-#include "dm_utilities.hpp"
 
 using namespace deepmon;
 

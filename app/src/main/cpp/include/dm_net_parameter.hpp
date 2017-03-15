@@ -14,7 +14,6 @@ namespace deepmon {
     private:
         bool use_dm_layout = false;
         uint32_t num_layers = -1;
-        uint32_t input_h = -1, input_w = -1, input_c = -1;
         vector<string> layer_names;
         map<string, DM_Layer_Param *> layer_names_to_layer_params;
         bool failed_to_read = false;
@@ -26,10 +25,6 @@ namespace deepmon {
             Json::Value net;
             in >> net;
 
-            this->num_layers = net["NUM_LAYERS"].asUInt();
-            this->input_c = net["INPUT_C"].asUInt();
-            this->input_w = net["INPUT_W"].asUInt();
-            this->input_h = net["INPUT_H"].asUInt();
             this->use_dm_layout = net["USE_DM_LAYOUT"].asBool();
 
             for (Json::Value::iterator it = net["LAYERS"].begin(); it != net["LAYERS"].end(); ++it) {
@@ -38,35 +33,33 @@ namespace deepmon {
                 string conf_path((*it)["conf_file"].asString());
                 string w_path((*it)["weights_file"].asString());
 
+                vector<string> inputs;
+                for (Json::Value::iterator input_it = (*it)["inputs"].begin(); input_it != (*it)["inputs"].end(); ++input_it) {
+                    inputs.push_back((*input_it).asString());
+                }
+
                 /*
                  * FixMe: Please check correct type
                  */
 
                 layer_names.push_back(name);
 
-                DM_Layer_Param * layer_param = new DM_Layer_Param(name, type, net_dir_path, conf_path, w_path);
+                DM_Layer_Param * layer_param = new DM_Layer_Param(name, type, net_dir_path, conf_path, w_path, inputs, use_dm_layout);
 
                 pair<string, DM_Layer_Param*> pair(name, layer_param);
                 layer_names_to_layer_params.insert(pair);
             }
 
-            if(input_c <= 0 || input_h <= 0 || input_w <= 0)
-                failed_to_read = true;
+            this->num_layers = this->layer_names.size();
 
-            if(num_layers != layer_names.size())
+            //the first layer has to be data layer
+            if(layer_names_to_layer_params.find(this->layer_names.at(0))->second->GetType().compare(INPUT_NAME)) {
+                LOGD("First Layer has to be Data layer");
                 failed_to_read = true;
+            }
         }
         uint32_t GetNumLayers() {
             return this->num_layers;
-        }
-        uint32_t GetInputH() {
-            return this->input_h;
-        }
-        uint32_t GetInputW() {
-            return this->input_w;
-        }
-        uint32_t GetInputC() {
-            return this->input_c;
         }
         vector<string> GetLayerNames() {
             return vector<string>(layer_names);
@@ -82,7 +75,6 @@ namespace deepmon {
         void PrintNet() {
             if(!IsCorrupted()) {
                 LOGD("Network");
-                LOGD("\tInput: (%d, %d, %d)", input_c, input_h, input_w);
                 LOGD("\tNumber of layers: %d", num_layers);
                 for (int i = 0; i < num_layers; i++) {
                     layer_names_to_layer_params.find(layer_names.at(i))->second->PrintLayerParam();

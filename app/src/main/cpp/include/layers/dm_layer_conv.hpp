@@ -20,25 +20,24 @@ namespace deepmon {
         DM_Blob *filters;
         DM_Blob *biases;
     protected:
-        void Forward_CPU(
-                const std::vector<DM_Blob *> &bottom,
-                const std::vector<DM_Blob *> &top
-        );
-        void Forward_GPU(
-                const std::vector<DM_Blob *> &bottom,
-                const std::vector<DM_Blob *> &top
-        ) ;
     public:
         DM_Layer_Conv(DM_Layer_Param &param);
+        void LoadWeights();
+        void PrintInfo() {
+            LOGD("Layer: %s", this->name.c_str());
+            LOGD("\tType: %s", this->type.c_str());
+            LOGD("\tEnvironemt: %s", (env == ENVIRONMENT_CPU) ? "CPU" : "GPU");
+            LOGD("\tPrecision: %d", (precision == PRECISION_32) ? 32 : 16);
+            LOGD("\tFilter's dims: [%d %d %d %d]", num_filters, num_channels, filter_h, filter_w);
+            LOGD("\tPads: [%d %d %d %d]", pads.at(0), pads.at(1), pads.at(2), pads.at(3));
+            LOGD("\tStride: [%d %d]", strides.at(0), strides.at(1));
+            LOGD("\tDilation: [%d %d]", dilations.at(0), dilations.at(1));
 
-        void LayerSetUp(
-                const std::vector<DM_Blob*>& bottom,
-                const std::vector<DM_Blob*>& top);
-
-        void Reshape(
-                const std::vector<DM_Blob*>& bottom,
-                const std::vector<DM_Blob*>& top
-        );
+            string inputs_str;
+            for(int i = 0 ; i < this->inputs.size() ; i++)
+                inputs_str += this->inputs.at(i) + " ";
+            LOGD("\tInputs: [ %s ]", inputs_str.c_str());
+        }
     };
 }
 

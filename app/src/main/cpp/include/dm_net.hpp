@@ -2,12 +2,16 @@
 #define DM_NET_HPP
 
 #include "dm_net_parameter.hpp"
+#include "dm_layer.hpp"
 
 using namespace std;
 namespace deepmon {
     class DM_Net {
     private:
         DM_Net_Parameter *net_param;
+        vector<DM_Layer *> layers;
+        map<string, DM_Layer *> name_to_layer_map;
+        vector<DM_Layer *> pipeline;
         bool is_working = true;
     protected:
     public:
@@ -19,8 +23,20 @@ namespace deepmon {
         }
 
         void PrintNet() {
-            if(IsWorking())
+            if(IsWorking()) {
                 net_param->PrintNet();
+                for(int i = 0 ; i < this->layers.size() ; i++)
+                    this->layers.at(i)->PrintInfo();
+            }
+        }
+
+        void PrintProcessingPileline() {
+            if(IsWorking()) {
+                LOGD("Processing pipeline:");
+                for(int i = 0 ; i < pipeline.size() ; i++) {
+                    LOGD("\t%s", pipeline.at(i)->GetName().c_str());
+                }
+            }
         }
     };
 }

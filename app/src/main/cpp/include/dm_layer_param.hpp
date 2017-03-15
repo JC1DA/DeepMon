@@ -12,6 +12,7 @@ namespace deepmon {
         string model_dir_path;
         string conf_path;
         string weights_path;
+        vector<string> inputs;
     public:
 
         explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path) {
@@ -32,6 +33,16 @@ namespace deepmon {
             this->layout = use_dm_layout ? MEMORY_LAYOUT_DM : MEMORY_LAYOUT_CAFFE;
         }
 
+        explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path, vector<string> inputs, bool use_dm_layout) {
+            this->name = name;
+            this->type = type;
+            this->model_dir_path = model_dir_path;
+            this->conf_path = conf_path;
+            this->weights_path = weights_path;
+            this->inputs = inputs;
+            this->layout = use_dm_layout ? MEMORY_LAYOUT_DM : MEMORY_LAYOUT_CAFFE;
+        }
+
         string GetName() {
             return this->name;
         }
@@ -46,6 +57,9 @@ namespace deepmon {
         };
         MEMORY_LAYOUT GetMemoryLayout() {
             return layout;
+        }
+        vector<string> GetInputLayersNames() {
+            return vector<string>(inputs);
         }
         void PrintLayerParam() {
             LOGD("Layer's Name: %s", name.c_str());

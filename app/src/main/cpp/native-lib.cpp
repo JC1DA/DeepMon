@@ -57,4 +57,5 @@ JNIEXPORT void JNICALL
 
     DM_Net *net = new DM_Net(path);
     net->PrintNet();
+    net->PrintProcessingPileline();
 }

@@ -11,45 +11,30 @@ namespace deepmon {
 	class DM_Layer {
 	private:
 	public:
-		explicit DM_Layer();
-		virtual void Forward(
-			    const std::vector<DM_Blob *> &bottom,
-			    const std::vector<DM_Blob *> &top) {
-            switch(env) {
-                case ENVIRONMENT_CPU:
-                    Forward_CPU(bottom, top);
-                    break;
-                case ENVIRONMENT_GPU:
-                    Forward_GPU(bottom, top);
-                    break;
-            }
-        };
-        virtual void LayerSetUp(
-                const std::vector<DM_Blob*>& bottom,
-                const std::vector<DM_Blob*>& top) {
-        };
-        virtual void Reshape(
-                const std::vector<DM_Blob*>& bottom,
-                const std::vector<DM_Blob*>& top
-        ) = 0;
+		DM_Layer(string name, string type, vector<string> inputs) {
+            this->name = name;
+            this->type = type;
+            this->inputs = inputs;
+        }
         bool IsCorrupted() {
             return corrupted;
         }
+        string GetName() {
+            return this->name;
+        }
+        vector<string> GetBottomLayersNames() {
+            return vector<string>(inputs);
+        }
+		virtual void LoadWeights() = 0;
+        virtual void PrintInfo() = 0;
 	protected:
-		virtual void Forward_CPU(
-			const std::vector<DM_Blob *> &bottom,
-			const std::vector<DM_Blob *> &top
-			) = 0;
-        virtual void Forward_GPU(
-                const std::vector<DM_Blob *> &bottom,
-                const std::vector<DM_Blob *> &top
-        ) = 0;
-
+        DM_Layer_Param *param;
+        string name;
+        string type;
+        vector<string> inputs;
 		ENVIRONMENT_TYPE env = ENVIRONMENT_CPU;
         PRESICION_TYPE precision = PRECISION_32;
         bool corrupted = false;
-        vector<DM_Blob *> bottom_blobs; //only store references
-        vector<DM_Blob *> top_blobs; //store physical blobs
 	};
 }
 

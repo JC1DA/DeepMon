@@ -5,12 +5,12 @@
 #include <layers/dm_layer_conv.hpp>
 #include <json/json.h>
 #include <fstream>
-#include <dm.hpp>
 
 using namespace deepmon;
 
 namespace deepmon {
-    DM_Layer_Conv::DM_Layer_Conv(DM_Layer_Param &param) : DM_Layer() {
+    DM_Layer_Conv::DM_Layer_Conv(DM_Layer_Param &param) : DM_Layer(param.GetName(), param.GetType(), param.GetInputLayersNames()) {
+        this->param = &param;
         //read config file
         ifstream in(param.GetConfPath().c_str());
         Json::Value layer;
@@ -21,6 +21,10 @@ namespace deepmon {
         this->filter_h = layer["FILTER_H"].asUInt();
         this->filter_w = layer["FILTER_W"].asUInt();
         this->has_bias = layer["HAS_BIAS"].asBool();
+
+        this->env = (layer["USE_GPU"].asBool()) ? ENVIRONMENT_GPU : ENVIRONMENT_CPU;
+        if(this->env == ENVIRONMENT_GPU)
+            this->precision = (layer["USE_HALF"].asBool()) ? PRECISION_16 : PRECISION_32;
 
         for (Json::Value::iterator it = layer["FILTER_PADS"].begin(); it != layer["FILTER_PADS"].end(); ++it) {
             this->pads.push_back((*it).asUInt());
@@ -69,42 +73,24 @@ namespace deepmon {
             default:
                 LOGE("Invalid Memory Layout");
         }
+    }
 
+    void DM_Layer_Conv::LoadWeights() {
         float *bias_data = NULL;
         float *weights_data = NULL;
 
-        FILE *fp = fopen(param.GetWeightsPath().c_str(), "r");
+        FILE *fp = fopen(this->param->GetWeightsPath().c_str(), "r");
         if(this->has_bias) {
             bias_data = new float[this->num_filters];
-            fread(bias_data, this->num_filters * sizeof(float), fp);
+            fread((void*)bias_data, sizeof(float), this->num_filters, fp);
             this->biases = new DM_Blob(vector<uint32_t>(this->num_filters), this->env, this->precision, bias_data);
             delete bias_data;
         }
         weights_data = new float[this->num_filters * this->num_channels * this->filter_h * this->filter_w];
-        fread(weights_data, this->num_filters * this->num_channels * this->filter_h * this->filter_w * sizeof(float), fp);
+        fread((void*)weights_data, sizeof(float), this->num_filters * this->num_channels * this->filter_h * this->filter_w, fp);
         fclose(fp);
 
         this->filters = new DM_Blob(this->filters_shapes, this->env, this->precision, weights_data);
         delete weights_data;
-    }
-
-    void DM_Layer_Conv::Forward_CPU(const std::vector<DM_Blob *> &bottom,
-                                    const std::vector<DM_Blob *> &top) {
-
-    }
-
-    void DM_Layer_Conv::Forward_GPU(const std::vector<DM_Blob *> &bottom,
-                                    const std::vector<DM_Blob *> &top) {
-
-    }
-
-    void DM_Layer_Conv::LayerSetUp(const std::vector<DM_Blob *> &bottom,
-                                   const std::vector<DM_Blob *> &top) {
-
-    }
-
-    void DM_Layer_Conv::Reshape(const std::vector<DM_Blob *> &bottom,
-                                const std::vector<DM_Blob *> &top) {
-
     }
 }

@@ -60,6 +60,7 @@ namespace deepmon {
         DM_BLOB_FILTER_NUM_CHANNELS,
     } DM_BLOB_FILTER_IDX;
 
+#define INPUT_NAME      "DATA"
 #define CONV_NAME       "CONV"
 #define POOLING_NAME    "POOLING"
 #define FC_NAME         "FULLY_CONNECTED"
