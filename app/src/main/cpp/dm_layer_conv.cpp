@@ -9,12 +9,14 @@
 using namespace deepmon;
 
 namespace deepmon {
-    DM_Layer_Conv::DM_Layer_Conv(DM_Layer_Param &param) : DM_Layer(param.GetName(), param.GetType(), param.GetInputLayersNames()) {
-        this->param = &param;
+    DM_Layer_Conv::DM_Layer_Conv(DM_Layer_Param &param) : DM_Layer(param.GetName(), param.GetType(), param.GetInputLayersNames(), param.GetMemoryLayout()) {
         //read config file
         ifstream in(param.GetConfPath().c_str());
         Json::Value layer;
         in >> layer;
+
+        //save weights path
+        this->weights_path = param.GetWeightsPath();
 
         this->num_filters = layer["NUM_FILTERS"].asUInt();
         this->num_channels = layer["NUM_CHANNELS"].asUInt();
@@ -79,7 +81,7 @@ namespace deepmon {
         float *bias_data = NULL;
         float *weights_data = NULL;
 
-        FILE *fp = fopen(this->param->GetWeightsPath().c_str(), "r");
+        FILE *fp = fopen(this->weights_path.c_str(), "r");
         if(this->has_bias) {
             bias_data = new float[this->num_filters];
             fread((void*)bias_data, sizeof(float), this->num_filters, fp);
@@ -92,5 +94,20 @@ namespace deepmon {
 
         this->filters = new DM_Blob(this->filters_shapes, this->env, this->precision, weights_data);
         delete weights_data;
+    }
+
+    void DM_Layer_Conv::ComputeOutputShapes(vector<vector<uint32_t >> inputs_shapes_no_batches) {
+        if(inputs_shapes_no_batches.size() != 1) {
+            LOGE("Invalid Input's Shapes");
+            this->corrupted = true;
+            return;
+        }
+
+        vector<uint32_t> input_shapes = inputs_shapes_no_batches.at(0);
+        uint32_t input_channels;
+        if(mem_layout == MEMORY_LAYOUT_CAFFE)
+            input_channels = input_shapes.at(0);
+        else if(mem_layout == MEMORY_LAYOUT_DM)
+            input_channels = input_shapes.at(2);
     }
 }

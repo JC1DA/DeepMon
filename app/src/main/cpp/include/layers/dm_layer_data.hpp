@@ -11,6 +11,7 @@ namespace deepmon {
     protected:
     public:
         DM_Layer_Data(DM_Layer_Param &param);
+        void ComputeOutputShapes(vector<vector<uint32_t >> inputs_shapes_no_batches);
         void LoadWeights() {
 
         }

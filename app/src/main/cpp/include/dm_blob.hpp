@@ -13,6 +13,8 @@ namespace deepmon {
         ENVIRONMENT_TYPE environment;
         PRESICION_TYPE precision;
 
+        uint32_t refs = 0; //use to track how many layers will use this blobs in forwarding step
+
         int size; //number of items
         int mem_size; //number of bytes
         bool corrupted = false;
@@ -67,6 +69,16 @@ namespace deepmon {
                 return shapes.at(idx);
             else
                 return 1;
+        }
+        void increase_ref() {
+            this->refs++;
+        }
+        void free() {
+            this->refs--;
+            if(this->refs < 1) {
+                //free this blob
+                delete this;
+            }
         }
         void print_blob() {
             if(this->shapes.size() == 4) {

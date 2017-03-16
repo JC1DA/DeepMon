@@ -7,7 +7,6 @@
 #include <layers/dm_layer_data.hpp>
 #include "dm_net.hpp"
 #include "layers/dm_layer_conv.hpp";
-#include "dm_layer_param.hpp"
 
 using namespace std;
 using namespace deepmon;
@@ -90,5 +89,21 @@ namespace deepmon {
             LOGE("Network has cycle");
             this->is_working = false;
         }
+
+        //update tops_layers
+        for(int i = pipeline.size() - 1 ; i >= 0 ; i--) {
+            DM_Layer *layer = pipeline.at(i);
+            for(int j = 0 ; j < layer->GetBottomLayersNames().size() ; j++) {
+                DM_Layer *bottom_layer = name_to_layer_map.find(layer->GetBottomLayersNames().at(j))->second;
+                bottom_layer->AppendTopLayer(layer->GetName());
+            }
+        }
+
+        //load weights - implement later
+
+        //create output-shapes and check
+
+
+        delete this->net_param;
     }
 }

@@ -58,6 +58,12 @@ namespace deepmon {
                 failed_to_read = true;
             }
         }
+        ~DM_Net_Parameter() {
+            for(int i = 0 ; i < this->layer_names.size() ; i++) {
+                DM_Layer_Param *layer_param = this->layer_names_to_layer_params.find(this->layer_names.at(i))->second;
+                delete layer_param;
+            }
+        }
         uint32_t GetNumLayers() {
             return this->num_layers;
         }

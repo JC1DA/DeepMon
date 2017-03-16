@@ -26,12 +26,12 @@ namespace deepmon {
     }
 
     DM_Blob::~DM_Blob() {
-        if(this->cpu_data != NULL) {
+        if(environment == ENVIRONMENT_CPU) {
             delete this->cpu_data;
             this->cpu_data = NULL;
         }
 
-        if(this->gpu_data != NULL) {
+        if(environment == ENVIRONMENT_GPU) {
             clReleaseMemObject(this->gpu_data);
             this->gpu_data = NULL;
         }

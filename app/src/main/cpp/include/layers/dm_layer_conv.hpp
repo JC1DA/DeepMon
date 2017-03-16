@@ -17,12 +17,14 @@ namespace deepmon {
 
         bool has_bias = false;
         vector<uint32_t> filters_shapes;
+        string weights_path;
         DM_Blob *filters;
         DM_Blob *biases;
     protected:
     public:
         DM_Layer_Conv(DM_Layer_Param &param);
         void LoadWeights();
+        void ComputeOutputShapes(vector<vector<uint32_t >> inputs_shapes_no_batches);
         void PrintInfo() {
             LOGD("Layer: %s", this->name.c_str());
             LOGD("\tType: %s", this->type.c_str());
@@ -34,8 +36,8 @@ namespace deepmon {
             LOGD("\tDilation: [%d %d]", dilations.at(0), dilations.at(1));
 
             string inputs_str;
-            for(int i = 0 ; i < this->inputs.size() ; i++)
-                inputs_str += this->inputs.at(i) + " ";
+            for(int i = 0 ; i < this->bottom_layers.size() ; i++)
+                inputs_str += this->bottom_layers.at(i) + " ";
             LOGD("\tInputs: [ %s ]", inputs_str.c_str());
         }
     };
