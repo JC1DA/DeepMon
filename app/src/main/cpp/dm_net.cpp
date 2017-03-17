@@ -12,15 +12,15 @@ using namespace std;
 using namespace deepmon;
 namespace deepmon {
     DM_Net::DM_Net(string model_dir_path) {
-        this->net_param = new DM_Net_Parameter(model_dir_path);
-        if(this->net_param->IsCorrupted()) {
+        DM_Net_Parameter *net_param = new DM_Net_Parameter(model_dir_path);
+        if(net_param->IsCorrupted()) {
             this->is_working = false;
             return;
         }
 
-        for(int i = 0 ; i < this->net_param->GetLayerNames().size() ; i++) {
-            string layer_name = this->net_param->GetLayerNames().at(i);
-            DM_Layer_Param param = this->net_param->GetLayerParam(layer_name);
+        for(int i = 0 ; i < net_param->GetLayerNames().size() ; i++) {
+            string layer_name = net_param->GetLayerNames().at(i);
+            DM_Layer_Param param = net_param->GetLayerParam(layer_name);
             LOGD("Parsing layer %s", layer_name.c_str());
             DM_Layer *layer = NULL;
 
@@ -35,11 +35,13 @@ namespace deepmon {
             name_to_layer_map.insert(pair);
         }
 
+        delete net_param;
+
         //create processing chains
         this->pipeline.push_back(layers.at(0));
-
         vector<string> processed_layers({layers.at(0)->GetName()});
         vector<string> pending_layers;
+
         for(int i = 1 ; i < layers.size() ; i++) {
             pending_layers.push_back(layers.at(i)->GetName());
         }
@@ -88,6 +90,7 @@ namespace deepmon {
         if(has_cycle) {
             LOGE("Network has cycle");
             this->is_working = false;
+            return;
         }
 
         //update tops_layers
@@ -100,10 +103,55 @@ namespace deepmon {
         }
 
         //load weights - implement later
+        for(int i = 0 ; i < pipeline.size() ; i++) {
+            pipeline.at(i)->LoadWeights();
+        }
 
         //create output-shapes and check
+        for(int i = 0 ; i < pipeline.size() ; i++) {
+            if(i == 0) {
+                pipeline.at(i)->ComputeOutputShapes(vector<vector<uint32_t>>());
+            } else {
+                vector<vector<uint32_t>> prev_inputs;
+                vector<string> prev_layers_names = pipeline.at(i)->GetBottomLayersNames();
+                for(int j = 0 ; j < prev_layers_names.size() ; j++) {
+                    prev_inputs.push_back(name_to_layer_map.find(prev_layers_names.at(j))->second->GetOutputShapes());
+                }
+                pipeline.at(i)->ComputeOutputShapes(prev_inputs);
 
+                if(pipeline.at(i)->IsCorrupted()) {
+                    LOGE("%s has been corrupted", pipeline.at(i)->GetName().c_str());
+                    return;
+                }
+            }
+        }
+    }
 
-        delete this->net_param;
+    void DM_Net::Forward(float *data) {
+        if(!IsWorking()) {
+            return;
+        }
+
+        vector<uint32_t> input_shapes = this->pipeline.at(0)->GetOutputShapes();
+        DM_Blob *input_blob = new DM_Blob(input_shapes, ENVIRONMENT_CPU, PRECISION_32, data);
+        //push input_blob into data layer
+        this->pipeline.at(0)->EnqueueInputBlob(input_blob);
+        DM_Blob *result = NULL;
+        for(int i = 0 ; i < pipeline.size() ; i++) {
+            if(i == 0) {
+                result = pipeline.at(i)->Forward(input_blob);
+            } else {
+                result = pipeline.at(i)->Forward(result);
+            }
+
+            //send to upper layer's queues
+            vector<string> top_layers_names = pipeline.at(i)->GetTopLayersNames();
+            for(int j = 0 ; j < top_layers_names.size() ; j++) {
+                name_to_layer_map.find(top_layers_names.at(j))->second->EnqueueInputBlob(result);
+            }
+        }
+
+        //process final blob
+        
     }
 }

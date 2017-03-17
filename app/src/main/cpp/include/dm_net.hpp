@@ -8,7 +8,6 @@ using namespace std;
 namespace deepmon {
     class DM_Net {
     private:
-        DM_Net_Parameter *net_param;
         vector<DM_Layer *> layers;
         map<string, DM_Layer *> name_to_layer_map;
         vector<DM_Layer *> pipeline;
@@ -16,6 +15,9 @@ namespace deepmon {
     protected:
     public:
         DM_Net(string model_dir_path);
+
+        void Forward(float *data);
+
         bool IsWorking() {
             if(!is_working)
                 LOGE("Network is corrupted");
@@ -24,7 +26,11 @@ namespace deepmon {
 
         void PrintNet() {
             if(IsWorking()) {
-                net_param->PrintNet();
+                LOGD("Network");
+                LOGD("\tNumber of layers: %d", layers.size());
+                for (int i = 0; i < layers.size(); i++) {
+                    name_to_layer_map.find(layers.at(i)->GetName())->second->PrintInfo();
+                }
                 for(int i = 0 ; i < this->layers.size() ; i++)
                     this->layers.at(i)->PrintInfo();
             }

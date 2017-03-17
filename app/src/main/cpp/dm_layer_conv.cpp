@@ -105,9 +105,42 @@ namespace deepmon {
 
         vector<uint32_t> input_shapes = inputs_shapes_no_batches.at(0);
         uint32_t input_channels;
-        if(mem_layout == MEMORY_LAYOUT_CAFFE)
+        uint32_t input_h;
+        uint32_t input_w;
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
             input_channels = input_shapes.at(0);
-        else if(mem_layout == MEMORY_LAYOUT_DM)
+            input_h = input_shapes.at(1);
+            input_w = input_shapes.at(2);
+        }
+        else if(mem_layout == MEMORY_LAYOUT_DM) {
             input_channels = input_shapes.at(2);
+            input_h = input_shapes.at(0);
+            input_w = input_shapes.at(1);
+        }
+
+        if(this->num_channels != input_channels) {
+            LOGE("%s: Incorrect number of channels (%d != %d)", this->name.c_str(), this->num_channels, input_channels);
+            this->corrupted = true;
+            return;
+        }
+
+        const int output_h = (input_h + pads[1] + pads[3] - (dilations[0] * (filter_h - 1) + 1)) / strides[0] + 1;
+        const int output_w = (input_w + pads[0] + pads[2] - (dilations[1] * (filter_w - 1) + 1)) / strides[1] + 1;
+
+        if(output_h <= 0 || output_w <= 0) {
+            LOGE("%s: Incorrect output size (%d, %d)", output_h, output_w);
+            this->corrupted = true;
+            return;
+        }
+
+        if(mem_layout == MEMORY_LAYOUT_DM) {
+            this->output_shapes.push_back(output_h);
+            this->output_shapes.push_back(output_w);
+            this->output_shapes.push_back(num_filters);
+        } else if(mem_layout == MEMORY_LAYOUT_CAFFE){
+            this->output_shapes.push_back(num_filters);
+            this->output_shapes.push_back(output_h);
+            this->output_shapes.push_back(output_w);
+        }
     }
 }

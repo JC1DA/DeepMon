@@ -12,6 +12,7 @@ using namespace std;
 namespace deepmon {
     class DM_Net_Parameter {
     private:
+        bool persistent_blobs = false;
         bool use_dm_layout = false;
         uint32_t num_layers = -1;
         vector<string> layer_names;
@@ -26,6 +27,7 @@ namespace deepmon {
             in >> net;
 
             this->use_dm_layout = net["USE_DM_LAYOUT"].asBool();
+            this->persistent_blobs = net["PERSISTENT_BLOBS"].asBool();
 
             for (Json::Value::iterator it = net["LAYERS"].begin(); it != net["LAYERS"].end(); ++it) {
                 string name((*it)["name"].asString());
@@ -44,7 +46,7 @@ namespace deepmon {
 
                 layer_names.push_back(name);
 
-                DM_Layer_Param * layer_param = new DM_Layer_Param(name, type, net_dir_path, conf_path, w_path, inputs, use_dm_layout);
+                DM_Layer_Param * layer_param = new DM_Layer_Param(name, type, net_dir_path, conf_path, w_path, inputs, use_dm_layout, persistent_blobs);
 
                 pair<string, DM_Layer_Param*> pair(name, layer_param);
                 layer_names_to_layer_params.insert(pair);
@@ -77,6 +79,9 @@ namespace deepmon {
             if(failed_to_read)
                 LOGE("Network is corrupted");
             return failed_to_read;
+        }
+        bool IsUsingPersitentBlobs() {
+            return this->persistent_blobs;
         }
         void PrintNet() {
             if(!IsCorrupted()) {
