@@ -6,7 +6,7 @@
 #include <dm_layer.hpp>
 #include <layers/dm_layer_data.hpp>
 #include "dm_net.hpp"
-#include "layers/dm_layer_conv.hpp";
+#include "layers/dm_layer_conv.hpp"
 
 using namespace std;
 using namespace deepmon;

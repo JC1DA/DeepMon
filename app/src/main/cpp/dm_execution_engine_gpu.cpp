@@ -11,6 +11,7 @@
 #include <dm_err.hpp>
 #include <dm_kernels.hpp>
 #include <dm_common.hpp>
+#include <dm_blob.hpp>
 
 namespace deepmon {
     DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRONMENT_GPU) {

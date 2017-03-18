@@ -14,7 +14,7 @@ android {
             cmake {
                 cppFlags "-std=c++11"
                 arguments "-DANDROID_STL=gnustl_static"
-                //arguments "-DANDROID_TOOLCHAIN=gcc"
+                arguments "-DANDROID_TOOLCHAIN=gcc"
             }
         }
         ndk {

@@ -5,6 +5,7 @@
 #include <CL/cl.h>
 #include "dm_common.hpp"
 #include "dm_log.hpp"
+#include "dm.hpp"
 
 namespace deepmon {
     class DM_Blob {
@@ -68,19 +69,6 @@ namespace deepmon {
             else
                 return 1;
         }
-        /*DM_Blob *convert_to_cpu_blob() {
-            DM_Blob *result = NULL;
-            if(get_env() == ENVIRONMENT_CPU) {
-                result = new DM_Blob(get_shapes(), ENVIRONMENT_CPU, PRECISION_32, get_cpu_data());
-            } else if(get_env() == ENVIRONMENT_GPU) {
-                result = DeepMon::Get().get_execution_engine(false).blob_convert_to_cpu_blob(this);
-            }
-            return result;
-        }
-        DM_Blob *convert_to_gpu_blob(PRESICION_TYPE precision) {
-            DM_Blob * result = deepmon::DeepMon::Get().get_execution_engine(false).blob_convert_to_gpu_blob(this, precision);
-            return result;
-        }*/
         void print_blob() {
             if(this->shapes.size() == 4) {
                 for(int i = 0 ; i < shapes.at(0) ; i++) {

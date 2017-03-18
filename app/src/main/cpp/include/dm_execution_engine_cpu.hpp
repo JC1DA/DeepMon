@@ -1,9 +1,10 @@
 #ifndef DM_EXECUTION_ENGINE_CPU_HPP
 #define DM_EXECUTION_ENGINE_CPU_HPP
 
-#include "dm_common.hpp"
-#include "dm_blob.hpp"
+
 #include <cstdint>
+#include <vector>
+#include "dm_common.hpp"
 #include "dm_execution_engine.hpp"
 #include "dm_blob.hpp"
 

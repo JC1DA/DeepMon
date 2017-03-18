@@ -14,11 +14,11 @@
 #ifndef DM_GPU_HPP
 #define DM_GPU_HPP
 
-#include "dm_execution_engine.hpp"
-#include "dm_blob.hpp"
 #include "dm_kernel_defs.hpp"
 #include "dm_kernel_object.hpp"
 #include "dm_common.hpp"
+#include "dm_blob.hpp"
+#include "dm_execution_engine.hpp"
 #include <map>
 
 namespace deepmon {

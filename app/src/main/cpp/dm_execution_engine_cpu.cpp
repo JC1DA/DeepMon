@@ -3,6 +3,7 @@
 //
 
 #include <dm_execution_engine_cpu.hpp>
+#include <dm_blob.hpp>
 
 namespace deepmon {
     DM_Execution_Engine_CPU::DM_Execution_Engine_CPU() : DM_Execution_Engine(ENVIRONMENT_CPU) {

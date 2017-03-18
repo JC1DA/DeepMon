@@ -45,6 +45,7 @@ add_library( # Sets the name of the library.
              ${source_DIR}/dm_layer.cpp
              ${source_DIR}/dm_layer_conv.cpp
              ${source_DIR}/dm_layer_data.cpp
+             ${source_DIR}/dm_layer_pooling.cpp
              )
 
 target_include_directories(deepmon PRIVATE ${distribution_DIR}/opencl/include ${distribution_DIR}/openblas/include ${distribution_DIR}/jsoncpp/include)
