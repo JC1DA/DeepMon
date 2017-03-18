@@ -3,7 +3,7 @@
 //
 
 #include <CL/cl.h>
-#include "dm_kernel_object.hpp"
+#include <dm_kernel_object.hpp>
 
 namespace deepmon {
     DM_Kernel_Object::DM_Kernel_Object(cl_kernel kernel) {

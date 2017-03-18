@@ -4,17 +4,13 @@
  * and open the template in the editor.
  */
 
-#include "dm_configs.hpp"
-#include "dm_log.hpp"
-#include "dm_err.hpp"
-#include "dm_execution_engine.hpp"
-#include "dm_execution_engine_gpu.hpp"
-#include "dm_kernels.hpp"
-#include "dm_kernel_object.hpp"
-#include "dm_kernel_defs.hpp"
-
 #include <sys/stat.h>
 #include <string>
+#include <dm_execution_engine.hpp>
+#include <dm_execution_engine_gpu.hpp>
+#include <dm_err.hpp>
+#include <dm_kernels.hpp>
+#include <dm_common.hpp>
 
 namespace deepmon {
     DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRONMENT_GPU) {

@@ -3,9 +3,9 @@
 //
 
 #include <dm.hpp>
-#include <dm_execution_engine_gpu.hpp>
+#include <dm_execution_engine_cpu.hpp>
 #include <cblas.h>
-#include "dm_execution_engine_cpu.hpp"
+#include <dm_execution_engine_gpu.hpp>
 
 using namespace deepmon;
 

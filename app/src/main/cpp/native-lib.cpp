@@ -1,9 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <dm.hpp>
-#include <dm_log.hpp>
-#include "dm_utilities.hpp"
-#include "dm_net.hpp"
+#include <dm_net.hpp>
 
 using namespace deepmon;
 

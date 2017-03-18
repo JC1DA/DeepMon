@@ -2,9 +2,10 @@
 // Created by JC1DA on 3/8/17.
 //
 
-#include <dm_log.hpp>
-#include "dm_execution_engine_cpu.hpp"
-#include "dm_execution_engine_gpu.hpp"
+#include <cstdint>
+#include <string.h>
+#include <dm_execution_engine_cpu.hpp>
+#include <dm_execution_engine_gpu.hpp>
 
 namespace deepmon {
     void CAFFE_LAYOUT_im2col_cpu(const float *data_im, const uint32_t channels, const uint32_t height,

@@ -127,9 +127,9 @@ namespace deepmon {
         }
     }
 
-    void DM_Net::Forward(float *data) {
+    DM_Blob * DM_Net::Forward(float *data) {
         if(!IsWorking()) {
-            return;
+            return NULL;
         }
 
         vector<uint32_t> input_shapes = this->pipeline.at(0)->GetOutputShapes();
@@ -152,6 +152,13 @@ namespace deepmon {
         }
 
         //process final blob
-        
+        //DM_Blob *final_result = result->convert_to_cpu_blob();
+
+        //free result if needed
+        if(!pipeline.at(pipeline.size() - 1)->IsUsingPersistentBlob()) {
+            delete result;
+        }
+
+        //return final_result;
     }
 }

@@ -2,14 +2,50 @@
 // Created by JC1DA on 3/9/17.
 //
 
-#include <dm_log.hpp>
-#include "dm_utilities.hpp"
+#include <dm.hpp>
 #include <sstream>
 #include <cblas.h>
 
 using namespace deepmon;
 
 namespace deepmon {
+    void print_blob_3d(DM_Blob &blob, int dimension) {
+        if(blob.get_shapes().size() != 3 || dimension < 0 || dimension > 2)
+            return;
+
+        int first_dim = blob.get_shape_at(0);
+        int second_dim = blob.get_shape_at(1);
+        if(dimension == 0) {
+            first_dim = 1;
+            second_dim = 2;
+        } else if(dimension == 1) {
+            first_dim = 0;
+            second_dim = 2;
+        }
+
+        for(int x = 0 ; x < first_dim ; x++) {
+            for(int y = 0 ; y < second_dim ; y++) {
+                std::string str("");
+                for(int c = 0 ; c < blob.get_shape_at(dimension) ; c++) {
+                    int idx;
+                    if(dimension == 0) {
+                        idx = (c * first_dim + x) * second_dim + y;
+                    } else if(dimension == 1) {
+                        idx = (x * blob.get_shape_at(dimension) + c) * second_dim + y;
+                    } else {
+                        idx = (x * second_dim + y) * blob.get_shape_at(dimension) + c;
+                    }
+                    float data = blob.get_cpu_data()[idx];
+                    std::stringstream ss;
+                    ss << data;
+                    str += ss.str();
+                    str += " ";
+                }
+                LOGD("(dim_1, dim_2) = (%d,%d): %s",x,y,str.c_str());
+            }
+        }
+    }
+
     void test_im2col(DeepMon &dm) {
         uint32_t num_filters = 3;
         uint32_t num_channels = 2;
@@ -113,43 +149,6 @@ namespace deepmon {
         }
 
         print_blob_3d(*dm_output, 2);
-    }
-
-    void print_blob_3d(DM_Blob &blob, int dimension) {
-        if(blob.get_shapes().size() != 3 || dimension < 0 || dimension > 2)
-            return;
-
-        int first_dim = blob.get_shape_at(0);
-        int second_dim = blob.get_shape_at(1);
-        if(dimension == 0) {
-            first_dim = 1;
-            second_dim = 2;
-        } else if(dimension == 1) {
-            first_dim = 0;
-            second_dim = 2;
-        }
-
-        for(int x = 0 ; x < first_dim ; x++) {
-            for(int y = 0 ; y < second_dim ; y++) {
-                std::string str("");
-                for(int c = 0 ; c < blob.get_shape_at(dimension) ; c++) {
-                    int idx;
-                    if(dimension == 0) {
-                        idx = (c * first_dim + x) * second_dim + y;
-                    } else if(dimension == 1) {
-                        idx = (x * blob.get_shape_at(dimension) + c) * second_dim + y;
-                    } else {
-                        idx = (x * second_dim + y) * blob.get_shape_at(dimension) + c;
-                    }
-                    float data = blob.get_cpu_data()[idx];
-                    std::stringstream ss;
-                    ss << data;
-                    str += ss.str();
-                    str += " ";
-                }
-                LOGD("(dim_1, dim_2) = (%d,%d): %s",x,y,str.c_str());
-            }
-        }
     }
 
     void matrix_multiplication(float *A, int A_width_, int A_height_,

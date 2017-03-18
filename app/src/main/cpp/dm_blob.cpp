@@ -1,14 +1,13 @@
 //
 // Created by JC1DA on 3/6/17.
 //
-
 #include <dm_blob.hpp>
-#include <dm_log.hpp>
+#include <dm_common.hpp>
 #include <dm.hpp>
-#include "dm_configs.hpp"
 
 namespace deepmon {
-    DM_Blob::DM_Blob(std::vector<uint32_t > shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data) {
+    DM_Blob::DM_Blob(std::vector<uint32_t> shapes, ENVIRONMENT_TYPE evn,
+                     PRESICION_TYPE precision_type, float *initialized_data) {
 #ifdef PRINT_FUNCTION_NAME
         LOGD("--%s--", __PRETTY_FUNCTION__);
 #endif

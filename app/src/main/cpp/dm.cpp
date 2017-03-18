@@ -4,25 +4,12 @@
  * and open the template in the editor.
  */
 
-#include <dm_log.hpp>
-#include "dm_configs.hpp"
-#include "dm_execution_engine_cpu.hpp"
+#include <dm_execution_engine_cpu.hpp>
+#include <dm_execution_engine_gpu.hpp>
 #include "dm.hpp"
-#include "dm_execution_engine_gpu.hpp"
-#include "dm_common.hpp"
 
 namespace deepmon {
     static DeepMon *dm;
-
-    DeepMon::DeepMon() {
-        this->cpu_execution_engine = new DM_Execution_Engine_CPU();
-        this->gpu_execution_engine = new DM_Execution_Engine_GPU();
-    }
-
-    DeepMon::DeepMon(std::string package_path) {
-        this->cpu_execution_engine = new DM_Execution_Engine_CPU();
-        this->gpu_execution_engine = new DM_Execution_Engine_GPU(package_path);
-    }
 
     void DeepMon::create_memory(ENVIRONMENT_TYPE env_type, DM_Blob *blob,
                                 float *initialized_data) {

@@ -13,8 +13,6 @@ namespace deepmon {
         ENVIRONMENT_TYPE environment;
         PRESICION_TYPE precision;
 
-        uint32_t refs = 0; //use to track how many layers will use this blobs in forwarding step
-
         int size; //number of items
         int mem_size; //number of bytes
         bool corrupted = false;
@@ -70,16 +68,19 @@ namespace deepmon {
             else
                 return 1;
         }
-        void increase_ref() {
-            this->refs++;
-        }
-        void free() {
-            this->refs--;
-            if(this->refs < 1) {
-                //free this blob
-                delete this;
+        /*DM_Blob *convert_to_cpu_blob() {
+            DM_Blob *result = NULL;
+            if(get_env() == ENVIRONMENT_CPU) {
+                result = new DM_Blob(get_shapes(), ENVIRONMENT_CPU, PRECISION_32, get_cpu_data());
+            } else if(get_env() == ENVIRONMENT_GPU) {
+                result = DeepMon::Get().get_execution_engine(false).blob_convert_to_cpu_blob(this);
             }
+            return result;
         }
+        DM_Blob *convert_to_gpu_blob(PRESICION_TYPE precision) {
+            DM_Blob * result = deepmon::DeepMon::Get().get_execution_engine(false).blob_convert_to_gpu_blob(this, precision);
+            return result;
+        }*/
         void print_blob() {
             if(this->shapes.size() == 4) {
                 for(int i = 0 ; i < shapes.at(0) ; i++) {

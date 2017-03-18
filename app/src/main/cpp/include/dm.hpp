@@ -14,22 +14,35 @@
 #ifndef DM_HPP
 #define DM_HPP
 
-#include "dm_execution_engine.hpp"
-#include "dm_common.hpp"
 #include <string>
+#include "dm_execution_engine_cpu.hpp"
+#include "dm_execution_engine_gpu.hpp"
+#include "dm_execution_engine.hpp"
+#include "dm_blob.hpp"
+
+using namespace std;
 
 namespace deepmon {
 
     class DeepMon {
     private:
-        DM_Execution_Engine *cpu_execution_engine;
-        DM_Execution_Engine *gpu_execution_engine;
+        DM_Execution_Engine *cpu_execution_engine = NULL;
+        DM_Execution_Engine *gpu_execution_engine = NULL;
+
     public:
-        DeepMon();
-        DeepMon(std::string package_path);
+        DeepMon() {
+            this->cpu_execution_engine = new DM_Execution_Engine_CPU();
+            this->gpu_execution_engine = new DM_Execution_Engine_GPU();
+        }
+
+        DeepMon(std::string package_path) {
+            this->cpu_execution_engine = new DM_Execution_Engine_CPU();
+            this->gpu_execution_engine = new DM_Execution_Engine_GPU(package_path);
+        }
+
         void create_memory(ENVIRONMENT_TYPE env_type, DM_Blob *blob, float *initialized_data);
         static DeepMon &Get();
-        static DeepMon &Get(std::string package_path);
+        static DeepMon &Get(string package_path);
         DM_Execution_Engine &get_execution_engine(bool is_getting_cpu_engine) {
             if(is_getting_cpu_engine)
                 return *cpu_execution_engine;

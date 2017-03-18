@@ -15,13 +15,11 @@
 #define DM_GPU_HPP
 
 #include "dm_execution_engine.hpp"
-#include "dm_kernel_object.hpp"
 #include "dm_blob.hpp"
-#include <string>
-#include <CL/cl.h>
-#include <vector>
-#include <map>
 #include "dm_kernel_defs.hpp"
+#include "dm_kernel_object.hpp"
+#include "dm_common.hpp"
+#include <map>
 
 namespace deepmon {
     class DM_Execution_Engine_GPU : public DM_Execution_Engine {

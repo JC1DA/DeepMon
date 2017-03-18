@@ -5,6 +5,7 @@
 #include <queue>
 #include "dm_blob.hpp"
 #include "dm_layer_param.hpp"
+#include "dm_common.hpp"
 
 using namespace std;
 
@@ -20,6 +21,9 @@ namespace deepmon {
         }
         bool IsCorrupted() {
             return corrupted;
+        }
+        bool IsUsingPersistentBlob() {
+            return persistant_blobs;
         }
         string GetName() {
             return this->name;

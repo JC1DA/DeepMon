@@ -16,7 +16,7 @@ namespace deepmon {
     public:
         DM_Net(string model_dir_path);
 
-        void Forward(float *data);
+        DM_Blob *Forward(float *data);
 
         bool IsWorking() {
             if(!is_working)

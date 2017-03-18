@@ -2,9 +2,7 @@
 // Created by JC1DA on 3/6/17.
 //
 
-#include "dm_execution_engine_cpu.hpp"
-#include <dm_log.hpp>
-#include "dm_configs.hpp"
+#include <dm_execution_engine_cpu.hpp>
 
 namespace deepmon {
     DM_Execution_Engine_CPU::DM_Execution_Engine_CPU() : DM_Execution_Engine(ENVIRONMENT_CPU) {

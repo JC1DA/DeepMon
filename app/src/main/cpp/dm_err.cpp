@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-#include "dm_err.hpp"
+#include <dm_err.hpp>
 
 const char* opencl_error_to_str (cl_int error) {
     #define CASE_CL_CONSTANT(NAME) case NAME: return #NAME;

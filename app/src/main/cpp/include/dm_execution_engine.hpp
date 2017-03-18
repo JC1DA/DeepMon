@@ -23,7 +23,9 @@ namespace deepmon {
         ENVIRONMENT_TYPE type;
         bool initialized = false;
     public:
-        DM_Execution_Engine(ENVIRONMENT_TYPE type);
+        DM_Execution_Engine(ENVIRONMENT_TYPE type) {
+            this->type = type;
+        }
         virtual void create_memory(DM_Blob *blob, float *initialized_data)=0;
         virtual DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob) = 0;
         virtual DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision) = 0;

@@ -1,10 +1,14 @@
 #ifndef DM_EXECUTION_ENGINE_CPU_HPP
 #define DM_EXECUTION_ENGINE_CPU_HPP
 
+#include "dm_common.hpp"
+#include "dm_blob.hpp"
+#include <cstdint>
 #include "dm_execution_engine.hpp"
-#include <string>
+#include "dm_blob.hpp"
 
 namespace deepmon {
+
     class DM_Execution_Engine_CPU : public DM_Execution_Engine {
         void im2col(const float* data_im, const uint32_t channels,
                         const uint32_t height, const uint32_t width, const uint32_t kernel_h,
