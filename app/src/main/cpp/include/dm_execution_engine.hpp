@@ -20,23 +20,16 @@
 namespace deepmon {
     class DM_Execution_Engine {
     protected:
-        ENVIRONMENT_TYPE type;
+        ENVIRONMENT_TYPE evn;
         bool initialized = false;
     public:
-        DM_Execution_Engine(ENVIRONMENT_TYPE type) {
-            this->type = type;
+        DM_Execution_Engine(ENVIRONMENT_TYPE evn) {
+            this->evn = evn;
         }
-        virtual void create_memory(DM_Blob *blob, float *initialized_data)=0;
-        virtual DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob) = 0;
-        virtual DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision) = 0;
-        virtual void finalize_all_tasks() = 0;
-        virtual void do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
-            std::vector<uint32_t> filters_sizes, std::vector<uint32_t> strides, std::vector<uint32_t> pads, std::vector<uint32_t> dilations) = 0;
-        virtual void do_conv(MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
-            DM_Blob *filters, DM_Blob *biases, std::vector<uint32_t> strides, std::vector<uint32_t> pads, std::vector<uint32_t> dilations) = 0;
-        //virtual void do_pooling(void *input, void *params, void *output);
-        //virtual void do_fully_connected(void *input, void *params, void *output);
-        //virtual void do_activation(void *input, void *params, void *output);
+        bool IsWorking() {
+            return this->initialized;
+        }
+        virtual void AllocateMemory(DM_Blob *blob, float *initialized_data) = 0;
     };
 }
 

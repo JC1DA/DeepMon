@@ -5,7 +5,6 @@
 #include <CL/cl.h>
 #include "dm_common.hpp"
 #include "dm_log.hpp"
-#include "dm.hpp"
 
 namespace deepmon {
     class DM_Blob {
@@ -14,12 +13,14 @@ namespace deepmon {
         ENVIRONMENT_TYPE environment;
         PRESICION_TYPE precision;
 
-        int size; //number of items
-        int mem_size; //number of bytes
+        uint32_t size; //number of items
+        uint32_t mem_size; //number of bytes
         bool corrupted = false;
 
         float *cpu_data;
         cl_mem gpu_data;
+
+        bool is_persitent = false; //cannot be deleted during forward executions
 
     public:
         DM_Blob(std::vector<uint32_t> shapes, ENVIRONMENT_TYPE evn, PRESICION_TYPE precision_type, float * initialized_data);
@@ -33,10 +34,10 @@ namespace deepmon {
         std::vector<uint32_t> get_shapes() {
             return std::vector<uint32_t>(this->shapes);
         }
-        int get_size() {
+        uint32_t get_size() {
             return this->size;
         }
-        int get_mem_size() {
+        uint32_t get_mem_size() {
             return this->mem_size;
         }
         void set_size(int size) {
@@ -63,13 +64,37 @@ namespace deepmon {
         void set_gpu_data(cl_mem data) {
             this->gpu_data = data;
         }
-        int get_shape_at(int idx) {
+        void set_persistent(bool is_persistent) {
+            this->is_persitent = is_persistent;
+        }
+        bool is_persistent_blob() {
+            return this->is_persitent;
+        }
+        uint32_t get_shape_at(int idx) {
             if(idx < shapes.size())
                 return shapes.at(idx);
             else
                 return 1;
         }
+        uint32_t get_total_size() {
+            uint32_t size = 0;
+
+            uint32_t tmp = 1;
+            for(int i = 0 ; i < shapes.size() ; i++) {
+                tmp *= shapes.at(i);
+            }
+
+            if(shapes.size() != 0)
+                size = tmp;
+
+            return size;
+        }
         void print_blob() {
+            if(this->environment != ENVIRONMENT_CPU) {
+                LOGE("Cannot print Non-CPU blob");
+                return;
+            }
+
             if(this->shapes.size() == 4) {
                 for(int i = 0 ; i < shapes.at(0) ; i++) {
                     for(int j = 0 ; j < shapes.at(1) ; j++) {
@@ -103,6 +128,8 @@ namespace deepmon {
                 }
             }
         }
+        DM_Blob *ConvertToCpuBlob();
+        DM_Blob *CovnertToGpuBlob(PRESICION_TYPE precision);
     };
 
 }

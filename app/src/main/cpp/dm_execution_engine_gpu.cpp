@@ -1,24 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
+//
+// Created by JC1DA on 3/20/17.
+//
 #include <sys/stat.h>
 #include <string>
-#include <dm_execution_engine.hpp>
 #include <dm_execution_engine_gpu.hpp>
-#include <dm_err.hpp>
 #include <dm_kernels.hpp>
-#include <dm_common.hpp>
-#include <dm_blob.hpp>
 
 namespace deepmon {
     DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRONMENT_GPU) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-
         //initialize GPU
         if(!this->scan_for_gpus()) {
             LOGE("Failed to scan for gpus");
@@ -42,10 +31,6 @@ namespace deepmon {
     }
 
     DM_Execution_Engine_GPU::DM_Execution_Engine_GPU(std::string package_path) : DM_Execution_Engine(ENVIRONMENT_GPU) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-
         //initialize GPU
         if(!this->scan_for_gpus()) {
             LOGE("Failed to scan for gpus");
@@ -70,10 +55,6 @@ namespace deepmon {
 
     bool DM_Execution_Engine_GPU::scan_for_gpus() {
         bool initialized = false;
-
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
 
 #ifdef PRINT_STEPS
         LOGD("Scanning for GPUs");
@@ -116,7 +97,7 @@ namespace deepmon {
             SAMPLE_CHECK_ERRORS(err);
             if (err != CL_SUCCESS) continue;
 
-            char *platform_name = new char[platform_name_length + 1];
+            char *platform_name = (char *)malloc((platform_name_length + 1) * sizeof(char));
             platform_name[platform_name_length] = '\0';
 
             err = clGetPlatformInfo(
@@ -128,12 +109,12 @@ namespace deepmon {
             );
             SAMPLE_CHECK_ERRORS(err);
             if (err != CL_SUCCESS) {
-                delete platform_name;
+                free(platform_name);
                 continue;
             }
 
             this->platform_name.assign(platform_name);
-            delete platform_name;
+            free(platform_name);
 
 #ifdef PRINT_VARS
             LOGD("Found platform with name: %s", this->platform_name.c_str());
@@ -219,7 +200,7 @@ namespace deepmon {
             break;
         }
 
-        delete platforms;
+        free(platforms);
         return initialized;
     }
 
@@ -269,7 +250,8 @@ namespace deepmon {
         SAMPLE_CHECK_ERRORS(err);
         if(err != CL_SUCCESS) return log;
 
-        char* log_buf = new char[log_length + 1]; log_buf[log_length] = '\0';
+        char* log_buf = (char *)malloc((log_length + 1) * sizeof(char));
+        log_buf[log_length] = '\0';
         err = clGetProgramBuildInfo(
                 program,
                 this->device,
@@ -284,8 +266,28 @@ namespace deepmon {
         }
 
         log.append(log_buf);
-        delete log_buf;
+        free(log_buf);
         return log;
+    }
+
+    extern "C"
+    std::string DM_Execution_Engine_GPU::read_file(std::string path) {
+
+        FILE *fp = fopen(path.c_str(),"r");
+        int fd = fileno(fp);
+        struct stat buf;
+        fstat(fd, &buf);
+        int size = buf.st_size;
+
+        char *buffer =  (char *)malloc((size + 1) * sizeof(char));
+        buffer[size] = '\0';
+        fread(buffer, size, 1, fp);
+        fclose(fp);
+
+        std::string data(buffer);
+        free(buffer);
+
+        return data;
     }
 
     bool DM_Execution_Engine_GPU::compile_kernels() {
@@ -339,37 +341,8 @@ namespace deepmon {
         return is_compiled;
     }
 
-    extern "C"
-    std::string DM_Execution_Engine_GPU::read_file(std::string path) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-
-        FILE *fp = fopen(path.c_str(),"r");
-        int fd = fileno(fp);
-        struct stat buf;
-        fstat(fd, &buf);
-        int size = buf.st_size;
-
-        char *buffer = new char[size + 1];
-        buffer[size] = '\0';
-        fread(buffer, size, 1, fp);
-        fclose(fp);
-
-        std::string data(buffer);
-        delete buffer;
-
-        return data;
-    }
-
     bool DM_Execution_Engine_GPU::compile_kernels(std::string package_path) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-
         bool is_compiled = true;
-        cl_int err = CL_SUCCESS;
-
         std::string build_args = "";
 
         //compile for 32-bits floating point
@@ -416,9 +389,6 @@ namespace deepmon {
     }
 
     bool DM_Execution_Engine_GPU::read_kernels() {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         bool is_successful = false;
 
         if(this->program_32 != NULL) {
@@ -461,21 +431,7 @@ namespace deepmon {
         return is_successful;
     }
 
-    cl_command_queue DM_Execution_Engine_GPU::get_current_queue() {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-        /*static int current_idx = 0;
-        cl_command_queue queue = this->queues[current_idx];
-        current_idx = (current_idx + 1) % this->num_queues;
-        return queue;*/
-        return this->queues[0];
-    }
-
-    void DM_Execution_Engine_GPU::finalize_all_tasks() {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
+    void DM_Execution_Engine_GPU::FinalizeAllTasks() {
         for(int i = 0 ; i < this->num_queues ; i++) {
             cl_int err = clFinish(this->queues[i]);
             SAMPLE_CHECK_ERRORS(err);
@@ -483,12 +439,9 @@ namespace deepmon {
     }
 
     bool DM_Execution_Engine_GPU::read_data_from_host_fp32(cl_mem cl_data, float *data, int size_in_bytes) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         cl_int err = CL_SUCCESS;
 
-        cl_command_queue current_queue = get_current_queue();
+        cl_command_queue current_queue = GetCurrentQueue();
 
         float *buf_dst = (float *)clEnqueueMapBuffer(current_queue, \
 					cl_data, \
@@ -513,9 +466,6 @@ namespace deepmon {
 
     bool DM_Execution_Engine_GPU::read_data_from_host_fp16(cl_mem cl_data, float *data,
                                                            int size_in_bytes) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         cl_int err = CL_SUCCESS;
 
         if(!this->support_fp16)
@@ -540,7 +490,7 @@ namespace deepmon {
 
         size_t wgs[1] = {(size_t) size_in_bytes / sizeof(cl_half)};
 
-        cl_command_queue queue = get_current_queue();
+        cl_command_queue queue = GetCurrentQueue();
         err = clEnqueueNDRangeKernel(
                 queue,
                 kernel,
@@ -564,9 +514,6 @@ namespace deepmon {
 
     bool DM_Execution_Engine_GPU::read_data_from_host(cl_mem cl_data, float *data,
                                                       int size_in_bytes, PRESICION_TYPE type) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         if(type == PRECISION_32)
             return read_data_from_host_fp32(cl_data, data, size_in_bytes);
         if(type == PRECISION_16 && this->support_fp16)
@@ -609,7 +556,7 @@ namespace deepmon {
                 cl_data = blob->get_gpu_data();
             }
 
-            cl_command_queue current_queue = get_current_queue();
+            cl_command_queue current_queue = GetCurrentQueue();
 
             float *data = (float *)clEnqueueMapBuffer(current_queue, \
 					cl_data, \
@@ -694,8 +641,8 @@ namespace deepmon {
     }
 
     bool DM_Execution_Engine_GPU::execute_memcpy(PRESICION_TYPE precision, cl_mem cl_output, cl_mem cl_input,
-                                                   int num_items) {
-        cl_command_queue current_queue = get_current_queue();
+                                                 int num_items) {
+        cl_command_queue current_queue = GetCurrentQueue();
         cl_int err = CL_SUCCESS;
 
         cl_kernel kernel = NULL;
@@ -733,8 +680,8 @@ namespace deepmon {
     }
 
     bool DM_Execution_Engine_GPU::execute_float_to_half_conversion(cl_mem cl_output, cl_mem cl_input,
-                                                                     int num_items) {
-        cl_command_queue current_queue = get_current_queue();
+                                                                   int num_items) {
+        cl_command_queue current_queue = GetCurrentQueue();
         cl_int err = CL_SUCCESS;
 
         cl_kernel kernel = (this->kernels_map_fp16.find(std::string(KERNEL_CONVERT_FLOAT_TO_HALF)))->second->get_kernel();
@@ -761,15 +708,15 @@ namespace deepmon {
         SAMPLE_CHECK_ERRORS(err);
 
         if(err != CL_SUCCESS) {
-            return NULL;
+            return false;
         }
 
         return true;
     }
 
     bool DM_Execution_Engine_GPU::execute_half_to_float_conversion(cl_mem cl_output, cl_mem cl_input,
-                                                                     int num_items) {
-        cl_command_queue current_queue = get_current_queue();
+                                                                   int num_items) {
+        cl_command_queue current_queue = GetCurrentQueue();
         cl_int err = CL_SUCCESS;
 
         cl_kernel kernel = (this->kernels_map_fp16.find(std::string(KERNEL_CONVERT_HALF_TO_FLOAT)))->second->get_kernel();
@@ -796,17 +743,14 @@ namespace deepmon {
         SAMPLE_CHECK_ERRORS(err);
 
         if(err != CL_SUCCESS) {
-            return NULL;
+            return false;
         }
 
         return true;
     }
 
-    void DM_Execution_Engine_GPU::create_memory(DM_Blob *blob, float *initialized_data) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
-        if(!blob->is_corrupted() && blob->get_env() == this->type) {
+    void DM_Execution_Engine_GPU::AllocateMemory(DM_Blob *blob, float *initialized_data) {
+        if(blob->get_env() == this->evn) {
             int size_in_bytes = 0;
             if(blob->get_precision() == PRECISION_32 && this->has_working_gpu) {
                 size_in_bytes = blob->get_size() * sizeof(cl_float);
@@ -857,8 +801,73 @@ namespace deepmon {
             return NULL;
     }
 
-    void DM_Execution_Engine_GPU::do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
-            std::vector<uint32_t> filters_sizes, std::vector<uint32_t> strides, std::vector<uint32_t> pads, std::vector<uint32_t> dilations) {
+    void DM_Execution_Engine_GPU::ExecuteIm2Col(MEMORY_LAYOUT mem_layout, PRESICION_TYPE precision,
+                                                DM_Blob *input, uint32_t input_offset,
+                                                uint32_t filter_h, uint32_t filter_w,
+                                                uint32_t stride_h, uint32_t stride_w,
+                                                uint32_t pad_left, uint32_t pad_top, uint32_t pad_right, uint32_t pad_bottom,
+                                                uint32_t dilation_h, uint32_t dilation_w,
+                                                uint32_t output_h, uint32_t output_w,
+                                                DM_Blob *im2col_output, uint32_t im2col_offset) {
+        cl_int err = CL_SUCCESS;
+        cl_command_queue current_queue = GetCurrentQueue();
 
+        cl_mem cl_input = input->get_gpu_data();
+        cl_mem cl_output = im2col_output->get_gpu_data();
+
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+            cl_kernel kernel = (precision == PRECISION_32) ? kernels_map_fp32.find(KERNEL_CAFFE_IM2COL)->second->get_kernel() :
+                               kernels_map_fp16.find(KERNEL_CAFFE_IM2COL)->second->get_kernel();
+
+            uint32_t num_kernels = output_h * output_w * input->get_shape_at(CAFFE_BLOB_INOUT_CHANNELS_IDX);
+
+            int i = 0;
+            err  = clSetKernelArg(kernel, i++, sizeof(cl_int), &num_kernels);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_input);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &input_offset);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &input->get_shapes()[CAFFE_BLOB_INOUT_HEIGHT_IDX]);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &input->get_shapes()[CAFFE_BLOB_INOUT_WIDTH_IDX]);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &filter_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &filter_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &pad_top);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &pad_left);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &stride_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &stride_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &dilation_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &dilation_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_output);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &im2col_offset);
+
+            SAMPLE_CHECK_ERRORS(err);
+            if(err != CL_SUCCESS) {
+                return;
+            }
+
+            size_t wgs[1] = {(size_t)(output_h * output_w)};
+
+            err = clEnqueueNDRangeKernel(
+                    current_queue,
+                    kernel,
+                    1,
+                    0,
+                    wgs,
+                    0,
+                    0, 0, 0
+            );
+            err |= clFinish(current_queue);
+            SAMPLE_CHECK_ERRORS(err);
+
+            if(err != CL_SUCCESS) {
+                im2col_output->set_corrupted(true);
+                return;
+            }
+        } else {
+            //DM IM2COL
+            /*
+             * Fixme: Not implemented yet
+             */
+        }
     }
 }

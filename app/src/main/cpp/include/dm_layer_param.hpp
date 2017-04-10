@@ -1,6 +1,11 @@
 #ifndef DM_LAYER_PARAM_HPP
 #define DM_LAYER_PARAM_HPP
 
+#include <vector>
+#include <string>
+#include "dm_log.hpp"
+#include "dm_common.hpp"
+
 using namespace std;
 
 namespace deepmon {
@@ -15,36 +20,7 @@ namespace deepmon {
         vector<string> inputs;
         bool persistent_blobs = false;
     public:
-
-        explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path) {
-            this->name = name;
-            this->type = type;
-            this->model_dir_path = model_dir_path;
-            this->conf_path = conf_path;
-            this->weights_path = weights_path;
-            this->layout = MEMORY_LAYOUT_DM;
-        }
-
-        explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path, bool use_dm_layout) {
-            this->name = name;
-            this->type = type;
-            this->model_dir_path = model_dir_path;
-            this->conf_path = conf_path;
-            this->weights_path = weights_path;
-            this->layout = use_dm_layout ? MEMORY_LAYOUT_DM : MEMORY_LAYOUT_CAFFE;
-        }
-
-        explicit DM_Layer_Param(string name, string type, string model_dir_path, string conf_path, string weights_path, vector<string> inputs, bool use_dm_layout) {
-            this->name = name;
-            this->type = type;
-            this->model_dir_path = model_dir_path;
-            this->conf_path = conf_path;
-            this->weights_path = weights_path;
-            this->inputs = inputs;
-            this->layout = use_dm_layout ? MEMORY_LAYOUT_DM : MEMORY_LAYOUT_CAFFE;
-        }
-
-        explicit DM_Layer_Param(string name, string type, string model_dir_path, \
+        DM_Layer_Param(string name, string type, string model_dir_path, \
                                 string conf_path, string weights_path, vector<string> inputs, \
                                 bool use_dm_layout, bool use_persistent_blobs) {
             this->name = name;

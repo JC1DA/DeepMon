@@ -13,14 +13,12 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11"
-                arguments "-DANDROID_STL=gnustl_static"
-                arguments "-DANDROID_TOOLCHAIN=gcc"
             }
-        }
-        ndk {
-            // Specifies the ABI configurations of your native
-            // libraries Gradle should build and package with your APK.
-            abiFilters 'armeabi-v7a'
+            ndk {
+                // Specifies the ABI configurations of your native
+                // libraries Gradle should build and package with your APK.
+                abiFilters 'armeabi-v7a'
+            }
         }
     }
     buildTypes {
@@ -32,7 +30,7 @@ android {
     sourceSets {
         main {
             // let gradle pack the shared library into apk
-            jniLibs.srcDirs = ['../distribution/opencl/lib', '../distribution/openblas/lib', '../distribution/jsoncpp/lib']
+            jniLibs.srcDirs = ['../distribution/opencl/lib', '../distribution/openblas/lib', '../distribution/jsoncpp/lib', '../distribution/clblast/lib']
         }
     }
     externalNativeBuild {
@@ -47,6 +45,7 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:25.2.0'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 }

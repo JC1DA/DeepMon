@@ -10,9 +10,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
+
     public static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 9999;
 
     // Used to load the 'native-lib' library on application startup.
@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
                 Utilities.copyFile(activity, "common.cl");
                 Utilities.copyFile(activity, "im2col.cl");
                 Utilities.copyFile(activity, "conv.cl");
+                Utilities.copyFile(activity, "pooling.cl");
                 testDeepMonWithPackageName(activity.getPackageName().toString());
             }
         });
@@ -82,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
      * A native method that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
-    public native String stringFromJNI();
     public native void testDeepMon();
     public native void testDeepMonWithPackageName(String package_name);
     public native void testLoadNet(String model_dir_path);

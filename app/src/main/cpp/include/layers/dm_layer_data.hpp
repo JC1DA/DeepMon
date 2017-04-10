@@ -22,6 +22,8 @@ namespace deepmon {
             LOGD("\tPrecision: %d", (precision == PRECISION_32) ? 32 : 16);
             LOGD("\tInput: [%d %d %d]", input_c, input_h, input_w);
         }
+        DM_Blob *ForwardCpu(vector<DM_Blob *> blobs);
+        DM_Blob *ForwardGpu(vector<DM_Blob *> blobs);
     };
 }
 

@@ -14,12 +14,15 @@
 #ifndef DM_GPU_HPP
 #define DM_GPU_HPP
 
-#include "dm_kernel_defs.hpp"
-#include "dm_kernel_object.hpp"
 #include "dm_common.hpp"
 #include "dm_blob.hpp"
 #include "dm_execution_engine.hpp"
+#include "dm_kernel_defs.hpp"
+#include "dm_kernel_object.hpp"
 #include <map>
+#include <string>
+
+using namespace std;
 
 namespace deepmon {
     class DM_Execution_Engine_GPU : public DM_Execution_Engine {
@@ -27,7 +30,8 @@ namespace deepmon {
         std::vector<std::string> kernel_files {
                 std::string("common.cl"),
                 std::string("im2col.cl"),
-                std::string("conv.cl")
+                std::string("conv.cl"),
+                std::string("pooling.cl")
         };
         bool has_working_gpu = false;
         bool support_fp16 = false;
@@ -49,7 +53,6 @@ namespace deepmon {
         bool read_kernels();
         cl_program build_program(std::string source, std::string build_args);
         std::string get_program_build_log(cl_program program);
-        cl_command_queue get_current_queue();
 
         bool read_data_from_host_fp32(cl_mem cl_data, float *data, int size_in_bytes);
         bool read_data_from_host_fp16(cl_mem cl_data, float *data, int size_in_bytes);
@@ -68,9 +71,11 @@ namespace deepmon {
                 std::string(KERNEL_CONVERT_FLOAT_TO_HALF),
                 std::string(KERNEL_CONVERT_HALF_TO_FLOAT),
                 std::string(KERNEL_MEMCPY),
-                std::string("caffe_im2col"),
-                std::string("caffe_col2im"),
-                std::string("dm_conv_base")
+                std::string(KERNEL_CAFFE_IM2COL),
+                std::string(KERNEL_CAFFE_COL2IM),
+                std::string(KERNEL_DM_CONV_BASE),
+                std::string(KERNEL_CAFFE_MAXPOOL),
+                std::string(KERNEL_CAFFE_AVEPOOL)
         };
         std::map<std::string, DM_Kernel_Object *> kernels_map_fp32;
         std::map<std::string, DM_Kernel_Object *> kernels_map_fp16;
@@ -78,14 +83,40 @@ namespace deepmon {
         DM_Execution_Engine_GPU();
         DM_Execution_Engine_GPU(std::string package_path);
 
-        void finalize_all_tasks();
-        void create_memory(DM_Blob *blob, float *initialized_data);
+        void ExecuteIm2Col(MEMORY_LAYOUT mem_layout, PRESICION_TYPE precision,
+                           DM_Blob *input, uint32_t input_offset,
+                           uint32_t filter_h, uint32_t filter_w,
+                           uint32_t stride_h, uint32_t stride_w,
+                           uint32_t pad_left, uint32_t pad_top, uint32_t pad_right, uint32_t pad_bottom,
+                           uint32_t dilation_h, uint32_t dilation_w,
+                           uint32_t output_h, uint32_t output_w,
+                           DM_Blob *im2col_output, uint32_t im2col_offset);
+
+
+        void FinalizeAllTasks();
+        void AllocateMemory(DM_Blob *blob, float *initialized_data);
         DM_Blob *blob_convert_to_cpu_blob(DM_Blob *blob);
         DM_Blob *blob_convert_to_gpu_blob(DM_Blob *blob, PRESICION_TYPE precision);
-        void do_im2col(ENVIRONMENT_TYPE evn_type, MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
-            std::vector<uint32_t> filters_sizes, std::vector<uint32_t> strides, std::vector<uint32_t> pads, std::vector<uint32_t> dilations);
-        void do_conv(MEMORY_LAYOUT mem_layout, DM_Blob *input, DM_Blob *output, \
-            DM_Blob *filters, DM_Blob *biases, std::vector<uint32_t> strides, std::vector<uint32_t> pads, std::vector<uint32_t> dilations);
+        cl_command_queue GetCurrentQueue() {
+            return this->queues[0];
+        }
+        cl_context  GetContext() {
+            return this->context;
+        }
+
+        /*
+         * Fixme: this should not be public function
+         */
+        cl_kernel GetKernel(PRESICION_TYPE precision, string kernel_name) {
+            cl_kernel kernel = NULL;
+            if(precision == PRECISION_32) {
+                kernel = kernels_map_fp32.find(kernel_name)->second->get_kernel();
+            } else if(precision == PRECISION_16) {
+                kernel = kernels_map_fp16.find(kernel_name)->second->get_kernel();
+            }
+
+            return kernel;
+        }
     };
 }
 

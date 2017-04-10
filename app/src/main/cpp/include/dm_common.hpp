@@ -60,11 +60,12 @@ namespace deepmon {
         DM_BLOB_FILTER_NUM_CHANNELS,
     } DM_BLOB_FILTER_IDX;
 
-#define INPUT_NAME      "DATA"
-#define CONV_NAME       "CONV"
-#define POOLING_NAME    "POOLING"
-#define FC_NAME         "FULLY_CONNECTED"
-#define SOFTMAX_NAME    "SOFTMAX"
+    //all layers names
+#define LAYER_NAME_DATA                 "DATA"
+#define LAYER_NAME_CONV                 "CONV"
+#define LAYER_NAME_POOLING              "POOLING"
+#define LAYER_NAME_FULLY_CONNECTED      "FULLY_CONNECTED"
+#define LAYER_NAME_SOFTMAX              "SOFTMAX"
 
     inline bool CMP_OPTION(char *str, const char *option) {
         bool ret = strncmp(str, option, strlen(option)) == 0 ? true : false;

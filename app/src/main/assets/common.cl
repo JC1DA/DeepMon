@@ -6,6 +6,10 @@
   #pragma OPENCL EXTENSION cl_khr_fp16: enable
 #endif
 
+//common vars
+#define FLT_MAX 0
+#define FLT_MIN 0
+
 // Half-precision
 #if PRECISION == 16
   typedef half real;

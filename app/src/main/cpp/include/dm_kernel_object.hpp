@@ -9,8 +9,12 @@ namespace deepmon {
         cl_kernel kernel;
 
     public:
-        DM_Kernel_Object(cl_kernel kernel);
-        cl_kernel get_kernel();
+        DM_Kernel_Object(cl_kernel kernel) {
+            this->kernel = kernel;
+        }
+        cl_kernel get_kernel() {
+            return this->kernel;
+        }
     };
 }
 

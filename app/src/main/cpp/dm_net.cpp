@@ -2,11 +2,15 @@
 // Created by JC1DA on 3/13/17.
 //
 
+
+#include <string>
+#include <dm_net.hpp>
 #include <dm.hpp>
-#include <dm_layer.hpp>
+#include <layers/dm_layer_conv.hpp>
 #include <layers/dm_layer_data.hpp>
-#include "dm_net.hpp"
-#include "layers/dm_layer_conv.hpp"
+#include <layers/dm_layer_pooling.hpp>
+#include <layers/dm_layer_softmax.hpp>
+#include <layers/dm_layer_fc.hpp>
 
 using namespace std;
 using namespace deepmon;
@@ -24,10 +28,16 @@ namespace deepmon {
             LOGD("Parsing layer %s", layer_name.c_str());
             DM_Layer *layer = NULL;
 
-            if(!param.GetType().compare(INPUT_NAME)) {
+            if(!param.GetType().compare(LAYER_NAME_DATA)) {
                 layer = new DM_Layer_Data(param);
-            } else if(!param.GetType().compare(CONV_NAME)) {
+            } else if(!param.GetType().compare(LAYER_NAME_CONV)) {
                 layer = new DM_Layer_Conv(param);
+            } else if(!param.GetType().compare(LAYER_NAME_POOLING)) {
+                layer = new DM_Layer_Pooling(param);
+            } else if(!param.GetType().compare(LAYER_NAME_FULLY_CONNECTED)) {
+                layer = new DM_Layer_Fc(param);
+            } else if(!param.GetType().compare(LAYER_NAME_SOFTMAX)) {
+                layer = new DM_Layer_Softmax(param);
             }
             layers.push_back(layer);
 
@@ -35,7 +45,10 @@ namespace deepmon {
             name_to_layer_map.insert(pair);
         }
 
-        delete net_param;
+        /*
+         * Fixme: Why the fuck I could not delete this object
+         */
+        //delete net_param;
 
         //create processing chains
         this->pipeline.push_back(layers.at(0));
@@ -102,11 +115,6 @@ namespace deepmon {
             }
         }
 
-        //load weights - implement later
-        for(int i = 0 ; i < pipeline.size() ; i++) {
-            pipeline.at(i)->LoadWeights();
-        }
-
         //create output-shapes and check
         for(int i = 0 ; i < pipeline.size() ; i++) {
             if(i == 0) {
@@ -125,23 +133,27 @@ namespace deepmon {
                 }
             }
         }
+
+        //load weights - implement later
+        for(int i = 0 ; i < pipeline.size() ; i++) {
+            pipeline.at(i)->LoadWeights();
+        }
     }
 
-    DM_Blob * DM_Net::Forward(float *data) {
+    DM_Blob * DM_Net::Forward(DM_Blob *input_blob) {
         if(!IsWorking()) {
             return NULL;
         }
 
-        vector<uint32_t> input_shapes = this->pipeline.at(0)->GetOutputShapes();
-        DM_Blob *input_blob = new DM_Blob(input_shapes, ENVIRONMENT_CPU, PRECISION_32, data);
         //push input_blob into data layer
         this->pipeline.at(0)->EnqueueInputBlob(input_blob);
         DM_Blob *result = NULL;
+
         for(int i = 0 ; i < pipeline.size() ; i++) {
-            if(i == 0) {
-                result = pipeline.at(i)->Forward(input_blob);
-            } else {
-                result = pipeline.at(i)->Forward(result);
+            result = pipeline.at(i)->Forward();
+
+            if(result == NULL || result->is_corrupted()) {
+                break;
             }
 
             //send to upper layer's queues
@@ -149,16 +161,33 @@ namespace deepmon {
             for(int j = 0 ; j < top_layers_names.size() ; j++) {
                 name_to_layer_map.find(top_layers_names.at(j))->second->EnqueueInputBlob(result);
             }
+
+            /*if(i == 1) {
+                DM_Blob *tmp = result->ConvertToCpuBlob();
+                tmp->print_blob();
+                delete tmp;
+            }*/
         }
 
-        //process final blob
-        //DM_Blob *final_result = result->convert_to_cpu_blob();
-
-        //free result if needed
-        if(!pipeline.at(pipeline.size() - 1)->IsUsingPersistentBlob()) {
+        if(result != NULL && result->is_corrupted()) {
             delete result;
+            result = NULL;
         }
 
-        //return final_result;
+        if(result != NULL) {
+            //process final blob
+            DM_Blob *final_result = result->ConvertToCpuBlob();
+
+            //free result if needed
+            if(!pipeline.at(pipeline.size() - 1)->IsUsingPersistentBlob()) {
+                delete result;
+            }
+
+            result = final_result;
+            result->print_blob();
+        }
+
+
+        return result;
     }
 }

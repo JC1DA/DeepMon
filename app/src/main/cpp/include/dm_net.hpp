@@ -16,7 +16,7 @@ namespace deepmon {
     public:
         DM_Net(string model_dir_path);
 
-        DM_Blob *Forward(float *data);
+        DM_Blob *Forward(DM_Blob *blob);
 
         bool IsWorking() {
             if(!is_working)
@@ -31,8 +31,8 @@ namespace deepmon {
                 for (int i = 0; i < layers.size(); i++) {
                     name_to_layer_map.find(layers.at(i)->GetName())->second->PrintInfo();
                 }
-                for(int i = 0 ; i < this->layers.size() ; i++)
-                    this->layers.at(i)->PrintInfo();
+                /*for(int i = 0 ; i < this->layers.size() ; i++)
+                    this->layers.at(i)->PrintInfo();*/
             }
         }
 

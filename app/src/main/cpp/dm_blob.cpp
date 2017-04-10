@@ -3,14 +3,14 @@
 //
 #include <dm_blob.hpp>
 #include <dm_common.hpp>
+#include <dm_log.hpp>
 #include <dm.hpp>
+
+using namespace deepmon;
 
 namespace deepmon {
     DM_Blob::DM_Blob(std::vector<uint32_t> shapes, ENVIRONMENT_TYPE evn,
                      PRESICION_TYPE precision_type, float *initialized_data) {
-#ifdef PRINT_FUNCTION_NAME
-        LOGD("--%s--", __PRETTY_FUNCTION__);
-#endif
         this->cpu_data = NULL;
         this->gpu_data = NULL;
         this->size = 1;
@@ -21,19 +21,37 @@ namespace deepmon {
         this->environment = evn;
         this->precision = precision_type;
 
-        deepmon::DeepMon::Get().create_memory(evn, this, initialized_data);
+        DeepMon::Get().AllocateMemory(this->environment, this, initialized_data);
     }
 
     DM_Blob::~DM_Blob() {
         if(environment == ENVIRONMENT_CPU) {
-            delete this->cpu_data;
+            if(this->cpu_data != NULL)
+                delete this->cpu_data;
             this->cpu_data = NULL;
-        }
-
-        if(environment == ENVIRONMENT_GPU) {
-            clReleaseMemObject(this->gpu_data);
+        } else {
+            if(this->gpu_data != NULL)
+                clReleaseMemObject(this->gpu_data);
             this->gpu_data = NULL;
         }
+    }
+
+    DM_Blob* DM_Blob::ConvertToCpuBlob() {
+        if(this->is_corrupted())
+            return NULL;
+
+        DM_Blob *result = DeepMon::Get().ConvertBlob(this, ENVIRONMENT_CPU, PRECISION_32);
+
+        return result;
+    }
+
+    DM_Blob *DM_Blob::CovnertToGpuBlob(PRESICION_TYPE precision) {
+        if(this->is_corrupted())
+            return NULL;
+
+        DM_Blob *result = DeepMon::Get().ConvertBlob(this, ENVIRONMENT_GPU, precision);
+
+        return result;
     }
 }
 
