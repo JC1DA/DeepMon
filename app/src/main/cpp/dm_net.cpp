@@ -11,6 +11,7 @@
 #include <layers/dm_layer_pooling.hpp>
 #include <layers/dm_layer_softmax.hpp>
 #include <layers/dm_layer_fc.hpp>
+#include <layers/dm_layer_relu.hpp>
 
 using namespace std;
 using namespace deepmon;
@@ -38,6 +39,8 @@ namespace deepmon {
                 layer = new DM_Layer_Fc(param);
             } else if(!param.GetType().compare(LAYER_NAME_SOFTMAX)) {
                 layer = new DM_Layer_Softmax(param);
+            } else if(!param.GetType().compare(LAYER_NAME_RELU)) {
+                layer = new DM_Layer_ReLU(param);
             }
             layers.push_back(layer);
 

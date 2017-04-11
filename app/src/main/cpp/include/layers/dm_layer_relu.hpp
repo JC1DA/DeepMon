@@ -1,31 +1,23 @@
-#ifndef DM_LAYER_FC_HPP
-#define DM_LAYER_FC_HPP
+#ifndef DM_LAYER_RELU_HPP
+#define DM_LAYER_RELU_HPP
 
-#include <dm_layer.hpp>
 #include <dm_layer_param.hpp>
+#include <dm_layer.hpp>
+#include <dm_common.hpp>
+#include <string>
 
 namespace deepmon {
-    class DM_Layer_Fc : public DM_Layer {
+    class DM_Layer_ReLU : public DM_Layer {
     private:
-        string weights_path;
-        bool has_bias = false;
-        uint32_t num_neurons;
-        uint32_t input_size;
-
-        vector<uint32_t> filters_shapes;
-        DM_Blob *filters;
-        DM_Blob *biases;
-    protected:
     public:
-        DM_Layer_Fc(DM_Layer_Param &param);
+        DM_Layer_ReLU(DM_Layer_Param &param);
+        void LoadWeights() {}
         void ComputeOutputShapes(vector<vector<uint32_t >> inputs_shapes_no_batches);
-        void LoadWeights();
         void PrintInfo() {
             LOGD("Layer: %s", this->name.c_str());
             LOGD("\tType: %s", this->type.c_str());
-            LOGD("\tEnvironemt: CPU");
-            LOGD("\tPrecision: 32");
-            LOGD("\tNumber of Neurals: %d", num_neurons);
+            LOGD("\tEnvironemt: %s", (env == ENVIRONMENT_CPU) ? "CPU" : "GPU");
+            LOGD("\tPrecision: %d", (precision == PRECISION_32) ? 32 : 16);
 
             string inputs_str;
             for(int i = 0 ; i < this->bottom_layers.size() ; i++)

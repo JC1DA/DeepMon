@@ -66,6 +66,7 @@ namespace deepmon {
 #define LAYER_NAME_POOLING              "POOLING"
 #define LAYER_NAME_FULLY_CONNECTED      "FULLY_CONNECTED"
 #define LAYER_NAME_SOFTMAX              "SOFTMAX"
+#define LAYER_NAME_RELU                 "RELU"
 
     inline bool CMP_OPTION(char *str, const char *option) {
         bool ret = strncmp(str, option, strlen(option)) == 0 ? true : false;

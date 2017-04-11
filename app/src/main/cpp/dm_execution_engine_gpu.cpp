@@ -5,6 +5,7 @@
 #include <string>
 #include <dm_execution_engine_gpu.hpp>
 #include <dm_kernels.hpp>
+#include <clblast_half.h>
 
 namespace deepmon {
     DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRONMENT_GPU) {
@@ -869,5 +870,94 @@ namespace deepmon {
              * Fixme: Not implemented yet
              */
         }
+    }
+
+    void DM_Execution_Engine_GPU::ExecuteActivation(MEMORY_LAYOUT mem_layout,
+                                                    PRESICION_TYPE precision, string type,
+                                                    DM_Blob *input, DM_Blob *output) {
+        map<std::string, DM_Kernel_Object *> kernel_map;
+        if(precision == PRECISION_32)
+            kernel_map = kernels_map_fp32;
+        else if(precision == PRECISION_16)
+            kernel_map == kernels_map_fp16;
+
+        cl_kernel kernel;
+        if(!type.compare("ReLU"))
+            kernel = kernel_map.find(string(KERNEL_ACTIVATE_RELU))->second->get_kernel();
+        else if(!type.compare("Tanh"))
+            kernel = kernel_map.find(string(KERNEL_ACTIVATE_TANH))->second->get_kernel();
+        else if(!type.compare("Sigmoid"))
+            kernel = kernel_map.find(string(KERNEL_ACTIVATE_SIGMOID))->second->get_kernel();
+
+        if(!type.compare("ReLU") || !type.compare("Tanh") || !type.compare("Sigmoid")) {
+            int i = 0;
+            cl_int err = CL_SUCCESS;
+
+            int n = input->get_total_size();
+            cl_mem cl_in = input->get_gpu_data();
+            cl_mem cl_out = output->get_gpu_data();
+
+            err  = clSetKernelArg(kernel, i++, sizeof(cl_int), &n);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_in);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_out);
+            if(!type.compare("ReLU")) {
+                /*
+                 * Fixme: zero_data is stored in stack and might be visible only to this part of code
+                 * Might cause problem
+                 */
+                if(precision == PRECISION_32) {
+                    float zero_data = 0;
+                    err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &zero_data);
+                } else if(precision == PRECISION_16) {
+                    half zero_data = FloatToHalf(0);
+                    err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &zero_data);
+                }
+            }
+
+            SAMPLE_CHECK_ERRORS(err);
+            if(err != CL_SUCCESS) {
+                output->set_corrupted(true);
+                return;
+            }
+
+            size_t wgs[1] = {(size_t)(n)};
+
+            cl_command_queue queue = GetCurrentQueue();
+            err = clEnqueueNDRangeKernel(
+                    queue,
+                    kernel,
+                    1,
+                    0,
+                    wgs,
+                    0,
+                    0, 0, 0
+            );
+            err |= clFinish(queue);
+            SAMPLE_CHECK_ERRORS(err);
+            if(err != CL_SUCCESS) {
+                output->set_corrupted(true);
+                return;
+            }
+        } else {
+            //for future activation such as PReLU
+        }
+    }
+
+    void DM_Execution_Engine_GPU::ExecuteActivationReLU(MEMORY_LAYOUT mem_layout,
+                                                        PRESICION_TYPE precision, DM_Blob *input,
+                                                        DM_Blob *output) {
+        return ExecuteActivation(mem_layout, precision, string("ReLU"), input, output);
+    }
+
+    void DM_Execution_Engine_GPU::ExecuteActivationTanh(MEMORY_LAYOUT mem_layout,
+                                                        PRESICION_TYPE precision, DM_Blob *input,
+                                                        DM_Blob *output) {
+        return ExecuteActivation(mem_layout, precision, string("Tanh"), input, output);
+    }
+
+    void DM_Execution_Engine_GPU::ExecuteActivationSigmoid(MEMORY_LAYOUT mem_layout,
+                                                        PRESICION_TYPE precision, DM_Blob *input,
+                                                        DM_Blob *output) {
+        return ExecuteActivation(mem_layout, precision, string("Sigmoid"), input, output);
     }
 }

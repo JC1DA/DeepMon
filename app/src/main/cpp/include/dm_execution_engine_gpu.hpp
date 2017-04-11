@@ -31,7 +31,8 @@ namespace deepmon {
                 std::string("common.cl"),
                 std::string("im2col.cl"),
                 std::string("conv.cl"),
-                std::string("pooling.cl")
+                std::string("pooling.cl"),
+                std::string("activation.cl"),
         };
         bool has_working_gpu = false;
         bool support_fp16 = false;
@@ -75,10 +76,15 @@ namespace deepmon {
                 std::string(KERNEL_CAFFE_COL2IM),
                 std::string(KERNEL_DM_CONV_BASE),
                 std::string(KERNEL_CAFFE_MAXPOOL),
-                std::string(KERNEL_CAFFE_AVEPOOL)
+                std::string(KERNEL_CAFFE_AVEPOOL),
+                std::string(KERNEL_ACTIVATE_RELU),
+                std::string(KERNEL_ACTIVATE_TANH),
+                std::string(KERNEL_ACTIVATE_SIGMOID)
         };
         std::map<std::string, DM_Kernel_Object *> kernels_map_fp32;
         std::map<std::string, DM_Kernel_Object *> kernels_map_fp16;
+
+        void ExecuteActivation(MEMORY_LAYOUT mem_layout, PRESICION_TYPE precision, string type, DM_Blob *input, DM_Blob *output);
     public:
         DM_Execution_Engine_GPU();
         DM_Execution_Engine_GPU(std::string package_path);
@@ -91,6 +97,10 @@ namespace deepmon {
                            uint32_t dilation_h, uint32_t dilation_w,
                            uint32_t output_h, uint32_t output_w,
                            DM_Blob *im2col_output, uint32_t im2col_offset);
+
+        void ExecuteActivationReLU(MEMORY_LAYOUT mem_layout, PRESICION_TYPE precision, DM_Blob *input, DM_Blob *output);
+        void ExecuteActivationTanh(MEMORY_LAYOUT mem_layout, PRESICION_TYPE precision, DM_Blob *input, DM_Blob *output);
+        void ExecuteActivationSigmoid(MEMORY_LAYOUT mem_layout, PRESICION_TYPE precision, DM_Blob *input, DM_Blob *output);
 
 
         void FinalizeAllTasks();

@@ -10,6 +10,11 @@ namespace deepmon {
 #define KERNEL_DM_CONV_BASE             "dm_conv_base"
 #define KERNEL_CAFFE_MAXPOOL            "caffe_maxpool"
 #define KERNEL_CAFFE_AVEPOOL            "caffe_avepool"
+
+//Activation functions
+#define KERNEL_ACTIVATE_RELU            "activate_relu"
+#define KERNEL_ACTIVATE_TANH            "activate_tanh"
+#define KERNEL_ACTIVATE_SIGMOID         "activate_sigmoid"
 }
 
 #endif

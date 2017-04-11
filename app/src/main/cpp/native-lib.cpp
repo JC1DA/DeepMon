@@ -108,7 +108,7 @@ Java_com_lanytek_deepmon_MainActivity_testLoadNet(
 
     //Caffe
     for(int i = 0 ; i < size ; i++)
-        data[i] = i;
+        data[i] = (i % 2 == 0) ? 1 : -1;
 
 
     /*int idx = 0;
