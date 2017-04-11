@@ -48,7 +48,9 @@ add_library( # Sets the name of the library.
              ${source_DIR}/layers/dm_layer_pooling_cpu.cpp
              ${source_DIR}/layers/dm_layer_pooling_gpu.cpp
              ${source_DIR}/layers/dm_layer_softmax.cpp
-             ${source_DIR}/layers/dm_layer_fc.cpp)
+             ${source_DIR}/layers/dm_layer_fc.cpp
+             ${source_DIR}/layers/dm_layer_fc_cpu.cpp
+             ${source_DIR}/layers/dm_layer_fc_gpu.cpp)
 
 target_include_directories(deepmon PRIVATE
                                 ${distribution_DIR}/opencl/include
