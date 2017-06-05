@@ -8,6 +8,7 @@ namespace deepmon {
 #define KERNEL_CAFFE_IM2COL             "caffe_im2col"
 #define KERNEL_CAFFE_COL2IM             "caffe_col2im"
 #define KERNEL_DM_CONV_BASE             "dm_conv_base"
+#define KERNEL_DM_CONV_LOCAL            "dm_conv_local"
 #define KERNEL_CAFFE_MAXPOOL            "caffe_maxpool"
 #define KERNEL_CAFFE_AVEPOOL            "caffe_avepool"
 

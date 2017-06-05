@@ -7,8 +7,13 @@
 #endif
 
 //common vars
+#ifndef FLT_MAX
 #define FLT_MAX 0
+#endif
+
+#ifndef FLT_MIN
 #define FLT_MIN 0
+#endif
 
 // Half-precision
 #if PRECISION == 16

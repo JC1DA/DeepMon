@@ -75,6 +75,7 @@ namespace deepmon {
                 std::string(KERNEL_CAFFE_IM2COL),
                 std::string(KERNEL_CAFFE_COL2IM),
                 std::string(KERNEL_DM_CONV_BASE),
+                std::string(KERNEL_DM_CONV_LOCAL),
                 std::string(KERNEL_CAFFE_MAXPOOL),
                 std::string(KERNEL_CAFFE_AVEPOOL),
                 std::string(KERNEL_ACTIVATE_RELU),

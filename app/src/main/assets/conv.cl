@@ -63,3 +63,85 @@ __kernel void dm_conv_base(
         output[getIndexFrom4D(n, output_h, output_w, output_c, thread_id_n, thread_id_y, thread_id_x, thread_id_z)] = result;
     }
 }
+
+__kernel void dm_conv_local(
+    __global const real *input,
+    const int input_w,
+    const int input_h,
+    const int input_c,
+    __global const real *conv_weight,
+    __global const real *bias,
+    const int conv_w,
+    const int conv_h,
+    const int conv_n,
+    const int stride_w,
+    const int stride_h,
+    const int pad_w,
+    const int pad_h,
+    __global real *output,
+    const int output_w,
+    const int output_h
+) {
+    const int threadId_x = get_global_id(0) % output_w;
+    const int threadId_y = get_global_id(0) / output_h;
+    const int threadId_z = get_global_id(1);
+
+    __local real local_weight[64 * 3 * 3];
+    const int K = (input_c < 64) ? input_c : 64;
+
+    real result = 0;
+
+    const int loop_counts = input_c / K + ((input_c % K) == 0 ? 0 : 1);
+    for(int loop_idx = 0 ; loop_idx < loop_counts ; loop_idx++) {
+        const int part_c_size = (loop_idx < (input_c / K)) ? K : input_c % K;
+        const int size_to_read = part_c_size * conv_w * conv_h;
+
+        __global const real *conv_weight_base = conv_weight + threadId_z * conv_h * conv_w * input_c;
+        //read data into local memory
+        for(int local_idx = get_local_id(0) ; local_idx < size_to_read ; local_idx += get_local_size(0)) {
+            const int c_ = local_idx % part_c_size;
+            const int w_ = (local_idx / part_c_size) % conv_w;
+            const int h_ = local_idx / part_c_size / conv_w;
+            local_weight[local_idx] = conv_weight_base[(h_ * conv_w + w_) * input_c + (loop_idx * K) + c_];
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+
+        for(int k = 0 ; k < conv_h * conv_w ; k++) {
+        	const int y = k / conv_w;
+        	const int x = k % conv_w;
+        	const int global_input_y = threadId_y * stride_h - pad_h + y;
+        	const int global_input_x = threadId_x * stride_w - pad_w + x;
+
+        	int remaining = part_c_size;
+        	__global real *GI = input + (global_input_y * input_w + global_input_x) * input_c + loop_idx * K;
+        	__local  real *LW = local_weight + (y * conv_w + x) * part_c_size;
+
+        	const int need_process = (0 <= global_input_x && \
+        								global_input_x < input_w && \
+        								0 <= global_input_y && \
+        								global_input_y < input_h) ? 1 : 0;
+
+        	while(remaining > VWM) {
+        		realM tmp1 = (need_process == 0) ? 0 : vloadM(*LW);
+        		realM tmp2 = (need_process == 0) ? 0 : vloadM(*GI);
+        		result += dot(tmp1, tmp2);
+
+        		remaining -= VWM;
+	            LW += VWM;
+	            GI += VWM;
+        	}
+
+        	while(remaining > 0) {
+        		result += (need_process == 0) ? 0 : ((*LW) * (*GI));
+                remaining--;
+                LW++;
+                GI++;
+        	}
+        }
+
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+
+    if(threadId_x < output_w && threadId_y < output_h)
+        output[(threadId_y * output_w + threadId_x) * conv_n + threadId_z] = result + bias[threadId_z];
+}

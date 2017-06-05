@@ -37,6 +37,7 @@ namespace deepmon {
         void CAFFE_LAYOUT_conv_gpu(DM_Blob *input, DM_Blob *output);
         void CAFFE_LAYOUT_im2col_cpu(DM_Blob *input, DM_Blob *output);
         void CAFFE_LAYOUT_im2col_gpu(DM_Blob *input, DM_Blob *output);
+        void DM_LAYOUT_conv_gpu(DM_Blob *input, DM_Blob *output);
         void DM_LAYOUT_im2col_cpu(DM_Blob *input, DM_Blob *output);
     protected:
     public:
