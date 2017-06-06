@@ -78,6 +78,8 @@ namespace deepmon {
                 std::string(KERNEL_DM_CONV_LOCAL),
                 std::string(KERNEL_CAFFE_MAXPOOL),
                 std::string(KERNEL_CAFFE_AVEPOOL),
+                std::string(KERNEL_DM_MAXPOOL),
+                std::string(KERNEL_DM_AVEPOOL),
                 std::string(KERNEL_ACTIVATE_RELU),
                 std::string(KERNEL_ACTIVATE_TANH),
                 std::string(KERNEL_ACTIVATE_SIGMOID)

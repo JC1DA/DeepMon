@@ -63,4 +63,75 @@ namespace deepmon {
             return;
         }
     }
+
+    void DM_Layer_Pooling::DM_LAYOUT_ForwardGPU(DM_Blob *input, DM_Blob *output) {
+        int batches = input->get_shape_at(0);
+
+        cl_int err = CL_SUCCESS;
+        cl_command_queue current_queue = DeepMon::Get().GetGpuExecutionEngine().GetCurrentQueue();
+
+        cl_mem cl_input = input->get_gpu_data();
+        cl_mem cl_output = output->get_gpu_data();
+
+        cl_kernel kernel;
+
+        if(!type.compare("MAXPOOL"))
+            kernel = DeepMon::Get().GetGpuExecutionEngine().GetKernel(this->precision, KERNEL_DM_MAXPOOL);
+        else if(!type.compare("AVEPOOL"))
+            kernel = DeepMon::Get().GetGpuExecutionEngine().GetKernel(this->precision, KERNEL_DM_AVEPOOL);
+
+        int i = 0;
+        err  = clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_input);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_channels);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_left);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_top);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_output);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &batches);
+        SAMPLE_CHECK_ERRORS(err);
+        if(err != CL_SUCCESS) {
+            output->set_corrupted(true);
+            return;
+        }
+
+        size_t wgs[3] = {(size_t)output_w, (size_t)output_h, (size_t)num_channels};
+
+        err = clEnqueueNDRangeKernel(
+                current_queue,
+                kernel,
+                3,
+                0,
+                wgs,
+                0,
+                0, 0, 0
+        );
+        err |= clFinish(current_queue);
+        SAMPLE_CHECK_ERRORS(err);
+        if(err != CL_SUCCESS) {
+            output->set_corrupted(true);
+            return;
+        }
+    }
+
+    DM_Blob* DM_Layer_Pooling::do_pooling_gpu(DM_Blob *input) {
+        DM_Blob *output = new DM_Blob(vector<uint32_t> {
+                input->get_shape_at(0), output_shapes[0], output_shapes[1], output_shapes[2]
+        }, ENVIRONMENT_GPU, this->precision, NULL);
+
+        if(this->mem_layout == MEMORY_LAYOUT_CAFFE)
+            CAFFE_LAYOUT_ForwardGPU(input, output);
+        else if(this->mem_layout == MEMORY_LAYOUT_DM) {
+            DM_LAYOUT_ForwardGPU(input, output);
+        }
+
+        return output;
+    }
 }
+

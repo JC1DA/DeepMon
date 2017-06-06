@@ -150,44 +150,54 @@ namespace deepmon {
         cl_mem cl_input = input->get_gpu_data();
         cl_mem cl_output = output->get_gpu_data();
 
-        int i = 0;
-        err  = clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_input);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_w);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_h);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_channels);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &this->filters);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &this->biases);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_w);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_h);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_filters);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_w);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_h);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_left);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_top);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_output);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_w);
-        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_h);
-        SAMPLE_CHECK_ERRORS(err);
-        if(err != CL_SUCCESS) {
-            output->set_corrupted(true);
-            return;
+        for(int idx = 0 ; idx < input->get_shape_at(0) ; idx++) {
+            int offset_idx = idx;
+            int i = 0;
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_input), &offset_idx);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_input);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_channels);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &this->filters);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &this->biases);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_filters);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_h);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_left);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_top);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_output);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_w);
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_h);
+            SAMPLE_CHECK_ERRORS(err);
+            if(err != CL_SUCCESS) {
+                output->set_corrupted(true);
+                return;
+            }
+
+            size_t lgs[2] = {(size_t)128, (size_t)1};
+
+            int wgs_1 = ((output_h * output_w / lgs[0]) + ((output_h * output_w % lgs[0] == 0) ? 0 : 1)) * lgs[0];
+            size_t wgs[2] = {(size_t)wgs_1, (size_t)num_channels};
+
+            err = clEnqueueNDRangeKernel(
+                    current_queue,
+                    kernel,
+                    2,
+                    0,
+                    wgs,
+                    lgs,
+                    0, 0, 0
+            );
+            SAMPLE_CHECK_ERRORS(err);
+            if(err != CL_SUCCESS) {
+                output->set_corrupted(true);
+                return;
+            }
         }
 
-        size_t lgs[2] = {(size_t)128, (size_t)1};
-
-        int wgs_1 = ((output_h * output_w / lgs[0]) + ((output_h * output_w % lgs[0] == 0) ? 0 : 1)) * lgs[0];
-        size_t wgs[2] = {(size_t)wgs_1, (size_t)num_channels};
-
-        err = clEnqueueNDRangeKernel(
-                current_queue,
-                kernel,
-                2,
-                0,
-                wgs,
-                lgs,
-                0, 0, 0
-        );
-        err |= clFinish(current_queue);
+        err = clFinish(current_queue);
         SAMPLE_CHECK_ERRORS(err);
         if(err != CL_SUCCESS) {
             output->set_corrupted(true);

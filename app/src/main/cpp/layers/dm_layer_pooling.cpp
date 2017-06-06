@@ -109,34 +109,8 @@ namespace deepmon {
         }
 
         DM_Blob *input = blobs[0];
-        DM_Blob *output = new DM_Blob(vector<uint32_t> {
-                input->get_shape_at(0), output_shapes[0], output_shapes[1], output_shapes[2]
-                }, ENVIRONMENT_CPU, PRECISION_32, NULL);
 
-        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
-            if(!type.compare("MAXPOOL")) {
-                CAFFE_LAYOUT_ForwardCPU_MaxPool(input, output);
-            } else if(!type.compare("AVEPOOL")) {
-                CAFFE_LAYOUT_ForwardCPU_AvePool(input, output);
-            } else {
-                LOGE("[%s] Incorrect Memory Pooling Type", this->name.c_str());
-                output->set_corrupted(true);
-            }
-        } else if(mem_layout == MEMORY_LAYOUT_DM) {
-            if(!type.compare("MAXPOOL")) {
-                DM_LAYOUT_ForwardCPU_MaxPool(input, output);
-            } else if(!type.compare("AVEPOOL")) {
-                DM_LAYOUT_ForwardCPU_AvePool(input, output);
-            } else {
-                LOGE("[%s] Incorrect Memory Pooling Type", this->name.c_str());
-                output->set_corrupted(true);
-            }
-        } else {
-            LOGE("[%s] Incorrect Memory Layout", this->name.c_str());
-            output->set_corrupted(true);
-        }
-
-        return output;
+        return do_pooling_cpu(input);
     }
 
     DM_Blob* DM_Layer_Pooling::ForwardGpu(vector<DM_Blob *> blobs) {
@@ -146,18 +120,7 @@ namespace deepmon {
         }
 
         DM_Blob *input = blobs[0];
-        DM_Blob *output = new DM_Blob(vector<uint32_t> {
-                input->get_shape_at(0), output_shapes[0], output_shapes[1], output_shapes[2]
-        }, ENVIRONMENT_GPU, this->precision, NULL);
 
-        if(this->mem_layout == MEMORY_LAYOUT_CAFFE)
-            CAFFE_LAYOUT_ForwardGPU(input, output);
-        else if(this->mem_layout == MEMORY_LAYOUT_DM) {
-            /*
-             * Fixme: Please implement soon
-             */
-        }
-
-        return output;
+        return do_pooling_gpu(input);
     }
 }

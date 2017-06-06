@@ -65,6 +65,7 @@ __kernel void dm_conv_base(
 }
 
 __kernel void dm_conv_local(
+    const int offset_idx,
     __global const real *input,
     const int input_w,
     const int input_h,
@@ -91,6 +92,9 @@ __kernel void dm_conv_local(
 
     real result = 0;
 
+    const int input_offset = offset_idx * input_w * input_h * input_c;
+    const int output_offset = offset_idx * output_w * output_h * conv_n;
+
     const int loop_counts = input_c / K + ((input_c % K) == 0 ? 0 : 1);
     for(int loop_idx = 0 ; loop_idx < loop_counts ; loop_idx++) {
         const int part_c_size = (loop_idx < (input_c / K)) ? K : input_c % K;
@@ -113,7 +117,7 @@ __kernel void dm_conv_local(
         	const int global_input_x = threadId_x * stride_w - pad_w + x;
 
         	int remaining = part_c_size;
-        	__global real *GI = input + (global_input_y * input_w + global_input_x) * input_c + loop_idx * K;
+        	__global real *GI = input + input_offset + (global_input_y * input_w + global_input_x) * input_c + loop_idx * K;
         	__local  real *LW = local_weight + (y * conv_w + x) * part_c_size;
 
         	const int need_process = (0 <= global_input_x && \
@@ -143,5 +147,5 @@ __kernel void dm_conv_local(
     }
 
     if(threadId_x < output_w && threadId_y < output_h)
-        output[(threadId_y * output_w + threadId_x) * conv_n + threadId_z] = result + bias[threadId_z];
+        output[output_offset + (threadId_y * output_w + threadId_x) * conv_n + threadId_z] = result + bias[threadId_z];
 }

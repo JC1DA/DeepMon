@@ -162,4 +162,36 @@ namespace deepmon {
             top_data += num_channels * output_w * output_h;
         }
     }
+
+    DM_Blob* DM_Layer_Pooling::do_pooling_cpu(DM_Blob *input) {
+
+        DM_Blob *output = new DM_Blob(vector<uint32_t> {
+                input->get_shape_at(0), output_shapes[0], output_shapes[1], output_shapes[2]
+        }, ENVIRONMENT_CPU, PRECISION_32, NULL);
+
+        if(mem_layout == MEMORY_LAYOUT_CAFFE) {
+            if(!type.compare("MAXPOOL")) {
+                CAFFE_LAYOUT_ForwardCPU_MaxPool(input, output);
+            } else if(!type.compare("AVEPOOL")) {
+                CAFFE_LAYOUT_ForwardCPU_AvePool(input, output);
+            } else {
+                LOGE("[%s] Incorrect Memory Pooling Type", this->name.c_str());
+                output->set_corrupted(true);
+            }
+        } else if(mem_layout == MEMORY_LAYOUT_DM) {
+            if(!type.compare("MAXPOOL")) {
+                DM_LAYOUT_ForwardCPU_MaxPool(input, output);
+            } else if(!type.compare("AVEPOOL")) {
+                DM_LAYOUT_ForwardCPU_AvePool(input, output);
+            } else {
+                LOGE("[%s] Incorrect Memory Pooling Type", this->name.c_str());
+                output->set_corrupted(true);
+            }
+        } else {
+            LOGE("[%s] Incorrect Memory Layout", this->name.c_str());
+            output->set_corrupted(true);
+        }
+
+        return output;
+    }
 }

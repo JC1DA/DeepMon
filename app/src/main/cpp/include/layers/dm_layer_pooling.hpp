@@ -31,9 +31,14 @@ namespace deepmon {
 
         void CAFFE_LAYOUT_ForwardCPU_MaxPool(DM_Blob *input, DM_Blob *output);
         void CAFFE_LAYOUT_ForwardCPU_AvePool(DM_Blob *input, DM_Blob *output);
+        void CAFFE_LAYOUT_ForwardGPU(DM_Blob *input, DM_Blob *output);
+
         void DM_LAYOUT_ForwardCPU_MaxPool(DM_Blob *input, DM_Blob *output);
         void DM_LAYOUT_ForwardCPU_AvePool(DM_Blob *input, DM_Blob *output);
-        void CAFFE_LAYOUT_ForwardGPU(DM_Blob *input, DM_Blob *output);
+        void DM_LAYOUT_ForwardGPU(DM_Blob *input, DM_Blob *output);
+
+        DM_Blob *do_pooling_cpu(DM_Blob *input);
+        DM_Blob *do_pooling_gpu(DM_Blob *input);
     protected:
     public:
         DM_Layer_Pooling(DM_Layer_Param &param);
