@@ -18,6 +18,7 @@ namespace deepmon {
             this->bottom_layers = bottom_layers;
             this->mem_layout = mem_layout;
         }
+
         bool IsCorrupted() {
             return corrupted;
         }

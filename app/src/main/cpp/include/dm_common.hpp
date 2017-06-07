@@ -66,6 +66,7 @@ namespace deepmon {
 #define LAYER_NAME_POOLING              "POOLING"
 #define LAYER_NAME_FULLY_CONNECTED      "FULLY_CONNECTED"
 #define LAYER_NAME_SOFTMAX              "SOFTMAX"
+#define LAYER_NAME_ACTIVATION           "ACTIVATION"
 #define LAYER_NAME_RELU                 "RELU"
 #define LAYER_NAME_LEAKY                "LEAKY"
 

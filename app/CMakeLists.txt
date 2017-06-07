@@ -51,7 +51,9 @@ add_library( # Sets the name of the library.
              ${source_DIR}/layers/dm_layer_fc.cpp
              ${source_DIR}/layers/dm_layer_fc_cpu.cpp
              ${source_DIR}/layers/dm_layer_fc_gpu.cpp
-             ${source_DIR}/layers/dm_layer_relu.cpp)
+             ${source_DIR}/layers/dm_layer_activation.cpp
+             ${source_DIR}/layers/dm_layer_activation_cpu.cpp
+             ${source_DIR}/layers/dm_layer_activation_gpu.cpp)
 
 target_include_directories(deepmon PRIVATE
                                 ${distribution_DIR}/opencl/include

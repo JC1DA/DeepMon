@@ -12,6 +12,7 @@
 #include <layers/dm_layer_softmax.hpp>
 #include <layers/dm_layer_fc.hpp>
 #include <layers/dm_layer_relu.hpp>
+#include <layers/dm_layer_activation.hpp>
 
 using namespace std;
 using namespace deepmon;
@@ -39,8 +40,8 @@ namespace deepmon {
                 layer = new DM_Layer_Fc(param);
             } else if(!param.GetType().compare(LAYER_NAME_SOFTMAX)) {
                 layer = new DM_Layer_Softmax(param);
-            } else if(!param.GetType().compare(LAYER_NAME_RELU)) {
-                layer = new DM_Layer_ReLU(param);
+            } else if(!param.GetType().compare(LAYER_NAME_ACTIVATION)) {
+                layer = new DM_Layer_Activation(param);
             }
             layers.push_back(layer);
 
