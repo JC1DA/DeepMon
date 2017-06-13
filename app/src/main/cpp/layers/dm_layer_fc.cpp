@@ -72,7 +72,7 @@ namespace deepmon {
                  * Fixme: has to look at prev layer to know the shapes of input
                  */
                 vector<uint32_t> prev_layer_shapes = this->inputs_shapes.at(0);
-                if(prev_layer_shapes.size() == 1) {
+                if(prev_layer_shapes.size() == 1 || mem_layout == MEMORY_LAYOUT_CAFFE) {
                     //normal read
                     fread((void*)weights_data, sizeof(float), filters_shapes.at(0) * filters_shapes.at(1), fp);
                 } else if(prev_layer_shapes.size() == 3) {
