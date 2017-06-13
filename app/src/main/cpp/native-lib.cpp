@@ -3,6 +3,7 @@
 #include <dm.hpp>
 #include <dm_net.hpp>
 #include <clblast_c.h>
+#include <cstdlib>
 
 using namespace deepmon;
 
@@ -103,7 +104,7 @@ Java_com_lanytek_deepmon_MainActivity_testLoadNet(
     net->PrintNet();
     net->PrintProcessingPileline();
 
-    int size = 2 * 1 * 2 * 2;
+    int size = 3 * 448 * 448;
     float *data = new float[size];
 
     //Caffe
@@ -124,7 +125,7 @@ Java_com_lanytek_deepmon_MainActivity_testLoadNet(
         }
     }*/
 
-    DM_Blob *input = new DM_Blob(vector<uint32_t>{2,1,2,2}, ENVIRONMENT_CPU, PRECISION_32, data);
+    DM_Blob *input = new DM_Blob(vector<uint32_t>{1, 448, 448, 3}, ENVIRONMENT_GPU, PRECISION_32, data);
     free(data);
 
     net->Forward(input);

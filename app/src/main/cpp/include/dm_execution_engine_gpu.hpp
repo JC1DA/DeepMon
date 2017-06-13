@@ -32,6 +32,7 @@ namespace deepmon {
                 std::string("im2col.cl"),
                 std::string("conv.cl"),
                 std::string("pooling.cl"),
+                std::string("fc.cl"),
                 std::string("activation.cl"),
         };
         bool has_working_gpu = false;
@@ -76,6 +77,7 @@ namespace deepmon {
                 std::string(KERNEL_CAFFE_COL2IM),
                 std::string(KERNEL_DM_CONV_BASE),
                 std::string(KERNEL_DM_CONV_LOCAL),
+                std::string(KERNEL_DM_FC_BASE),
                 std::string(KERNEL_CAFFE_MAXPOOL),
                 std::string(KERNEL_CAFFE_AVEPOOL),
                 std::string(KERNEL_DM_MAXPOOL),

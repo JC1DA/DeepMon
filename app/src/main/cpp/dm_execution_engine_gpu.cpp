@@ -5,6 +5,7 @@
 #include <string>
 #include <dm_execution_engine_gpu.hpp>
 #include <dm_kernels.hpp>
+#include <cstdlib>
 
 namespace deepmon {
     DM_Execution_Engine_GPU::DM_Execution_Engine_GPU() : DM_Execution_Engine(ENVIRONMENT_GPU) {

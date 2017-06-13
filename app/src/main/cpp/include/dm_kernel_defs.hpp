@@ -13,6 +13,8 @@ namespace deepmon {
 #define KERNEL_DM_CONV_BASE             "dm_conv_base"
 #define KERNEL_DM_CONV_LOCAL            "dm_conv_local"
 
+#define KERNEL_DM_FC_BASE                  "fc_base"
+
 #define KERNEL_CAFFE_MAXPOOL            "caffe_maxpool"
 #define KERNEL_CAFFE_AVEPOOL            "caffe_avepool"
 #define KERNEL_DM_MAXPOOL               "dm_maxpool"

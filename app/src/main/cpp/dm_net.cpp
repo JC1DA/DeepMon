@@ -154,11 +154,17 @@ namespace deepmon {
         DM_Blob *result = NULL;
 
         for(int i = 0 ; i < pipeline.size() ; i++) {
+            LOGD("Processing layer %s", pipeline.at(i)->GetName().c_str());
+
             result = pipeline.at(i)->Forward();
 
             if(result == NULL || result->is_corrupted()) {
                 break;
             }
+
+            DM_Blob *tmp = result->ConvertToCpuBlob();
+            delete result;
+            result = tmp;
 
             //send to upper layer's queues
             vector<string> top_layers_names = pipeline.at(i)->GetTopLayersNames();
@@ -188,7 +194,7 @@ namespace deepmon {
             }
 
             result = final_result;
-            result->print_blob();
+            //result->print_blob();
         }
 
 

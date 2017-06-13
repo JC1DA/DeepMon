@@ -69,7 +69,7 @@ namespace deepmon {
         float *bias_data = NULL;
         float *weights_data = NULL;
 
-        if(0) {
+        if(1) {
             /*
              * There are no differences between loading weights into CPU or GPU memory
              * Fixme: Memory consumption might be very large in this step
@@ -78,7 +78,7 @@ namespace deepmon {
             if(this->has_bias) {
                 bias_data = new float[this->num_filters];
                 fread((void*)bias_data, sizeof(float), this->num_filters, fp);
-                this->biases = new DM_Blob(vector<uint32_t>(this->num_filters), this->env, this->precision, bias_data);
+                this->biases = new DM_Blob(vector<uint32_t>{this->num_filters}, this->env, this->precision, bias_data);
                 delete bias_data;
             }
             weights_data = new float[this->num_filters * this->num_channels * this->filter_h * this->filter_w];

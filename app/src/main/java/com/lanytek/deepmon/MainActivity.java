@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
                 Utilities.copyFile(activity, "im2col.cl");
                 Utilities.copyFile(activity, "conv.cl");
                 Utilities.copyFile(activity, "pooling.cl");
+                Utilities.copyFile(activity, "fc.cl");
                 Utilities.copyFile(activity, "activation.cl");
                 testDeepMonWithPackageName(activity.getPackageName().toString());
             }
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         btn_Read_Net.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/DeepMonModel";
+                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Yolo-Tiny";
                 testLoadNet(path);
             }
         });

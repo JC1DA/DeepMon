@@ -55,12 +55,12 @@ namespace deepmon {
         float *bias_data = NULL;
         float *weights_data = NULL;
 
-        if(0) {
+        if(1) {
             FILE *fp = fopen(this->weights_path.c_str(), "r");
             if(this->has_bias) {
                 bias_data = new float[this->num_neurons];
                 fread((void*)bias_data, sizeof(float), this->num_neurons, fp);
-                this->biases = new DM_Blob(vector<uint32_t>(this->num_neurons), this->env, this->precision, bias_data);
+                this->biases = new DM_Blob(vector<uint32_t>{this->num_neurons}, this->env, this->precision, bias_data);
                 delete bias_data;
             }
 
