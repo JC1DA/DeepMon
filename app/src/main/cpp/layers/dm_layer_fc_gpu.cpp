@@ -78,7 +78,9 @@ namespace deepmon {
 
             DM_Blob *biases_multiplier_blob = NULL;
             if (biases != NULL) {
-                biases_multiplier_blob = new DM_Blob(vector<uint32_t>{(uint32_t)n}, ENVIRONMENT_GPU,
+                vector<uint32_t> dim;
+                dim.push_back(n);
+                biases_multiplier_blob = new DM_Blob(dim, ENVIRONMENT_GPU,
                                                      this->precision, biases_multiplier);
             }
 

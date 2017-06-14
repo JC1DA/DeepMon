@@ -181,7 +181,7 @@ namespace deepmon {
             size_t lgs[2] = {(size_t)128, (size_t)1};
 
             int wgs_1 = ((output_h * output_w / lgs[0]) + ((output_h * output_w % lgs[0] == 0) ? 0 : 1)) * lgs[0];
-            size_t wgs[2] = {(size_t)wgs_1, (size_t)num_channels};
+            size_t wgs[2] = {(size_t)wgs_1, (size_t)num_filters};
 
             err = clEnqueueNDRangeKernel(
                     current_queue,

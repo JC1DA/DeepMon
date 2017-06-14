@@ -44,6 +44,39 @@ namespace deepmon {
                 }
             }
         }
+
+        vector<uint32_t> GetInputShapes() {
+            vector<uint32_t> shapes;
+            shapes.push_back(1);
+            vector<uint32_t> input_shapes = pipeline.at(0)->GetOutputShapes();
+            for(int i = 0 ; i < input_shapes.size() ; i++)
+                shapes.push_back(input_shapes.at(i));
+            return shapes;
+        }
+
+        vector<uint32_t> GetOutputShapes() {
+
+            /*
+             * FIXME: some models have multiple outputs
+             * One approach to fix is to identify in configuration file
+             * Store temp output only needed to save memory
+             */
+
+            vector<uint32_t> shapes;
+            shapes.push_back(1);
+            vector<uint32_t> last_layer_shapes = pipeline.at(pipeline.size() - 1)->GetOutputShapes();
+            for(int i = 0 ; i < last_layer_shapes.size() ; i++)
+                shapes.push_back(last_layer_shapes.at(i));
+            return shapes;
+        }
+
+        uint32_t GetOutputSize() {
+            uint32_t size = 1;
+            vector<uint32_t> output_shapes = GetOutputShapes();
+            for(int i = 0 ; i < output_shapes.size() ; i++)
+                size *= output_shapes.at(i);
+            return size;
+        }
     };
 }
 

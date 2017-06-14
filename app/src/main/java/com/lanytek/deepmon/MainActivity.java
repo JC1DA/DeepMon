@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 new async_processImage_yolo().execute();
+                //TestInference();
             }
         });
 
@@ -322,4 +323,5 @@ public class MainActivity extends AppCompatActivity {
     public native void InitDeepMonWithPackageName(String package_name);
     public native void LoadNet(String model_dir_path);
     public native float [] GetInference(float [] input);
+    public native float [] TestInference();
 }

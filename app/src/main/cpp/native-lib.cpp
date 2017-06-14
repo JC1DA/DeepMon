@@ -66,8 +66,34 @@ JNIEXPORT jfloatArray JNICALL
                 jfloatArray input_arr
         ) {
     jfloat* data = env->GetFloatArrayElements(input_arr, 0);
-    DM_Blob *input = new DM_Blob(vector<uint32_t>{1, 448, 448, 3}, ENVIRONMENT_GPU, PRECISION_32, data);
+
+    /*
+     * Default only support 1 inference
+     */
+
+    DM_Blob *input = new DM_Blob(net->GetInputShapes(), ENVIRONMENT_GPU, PRECISION_32, data);
     env->ReleaseFloatArrayElements(input_arr, data, 0);
+
+    DM_Blob *result = net->Forward(input); //this is cpu blob
+
+    jfloatArray resultArr = env->NewFloatArray(net->GetOutputSize());
+    env->SetFloatArrayRegion(resultArr, 0, net->GetOutputSize(), result->get_cpu_data());
+
+    return resultArr;
+}
+
+extern "C"
+JNIEXPORT jfloatArray JNICALL
+Java_com_lanytek_deepmon_MainActivity_TestInference(
+        JNIEnv* env,
+        jobject thisobj/* this */
+) {
+    float *data = (float *) malloc(3 * 448 * 448 * sizeof(float));
+    FILE *fp = fopen("/sdcard/dump/input", "r");
+    fread(data, 3 * 448 * 448, sizeof(float), fp);
+    fclose(fp);
+
+    DM_Blob *input = new DM_Blob(vector<uint32_t>{1, 448, 448, 3}, ENVIRONMENT_GPU, PRECISION_32, data);
 
     DM_Blob *result = net->Forward(input); //this is cpu blob
 

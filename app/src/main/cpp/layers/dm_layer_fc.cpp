@@ -72,21 +72,45 @@ namespace deepmon {
                  * Fixme: has to look at prev layer to know the shapes of input
                  */
                 vector<uint32_t> prev_layer_shapes = this->inputs_shapes.at(0);
-                if(prev_layer_shapes.size() == 1 || mem_layout == MEMORY_LAYOUT_CAFFE) {
-                    //normal read
-                    fread((void*)weights_data, sizeof(float), filters_shapes.at(0) * filters_shapes.at(1), fp);
+                if(prev_layer_shapes.size() == 1) {
+                    /*
+                     * FIXME: should take consideration of input memory layout
+                     * default: [input_size x output_size] - need to transpose
+                     */
+
+                    float *buffer = (float *) calloc(num_neurons, sizeof(float));
+                    for(int i = 0 ; i < input_size ; i++) {
+                        fread(buffer, sizeof(float), num_neurons, fp);
+                        for(int n = 0 ; n < num_neurons ; n++) {
+                            weights_data[n * input_size + i] = buffer[n];
+                        }
+                    }
+                    free(buffer);
                 } else if(prev_layer_shapes.size() == 3) {
+
+                    /*
+                     * Input memory layout: [input_size x output_size]
+                     * input_size = [c x h x w] if prev layer is conv layer
+                     */
+
                     //prev layer is conv layer
-                    for(int i = 0 ; i < this->num_neurons ; i++) {
-                        for(int j = 0 ; j < prev_layer_shapes.at(2) ; j++) { //c
-                            for(int m = 0 ; m < prev_layer_shapes.at(1) ; m++) {  //h
-                                for(int n = 0 ; n < prev_layer_shapes.at(0) ; n++) { //w
-                                    int new_idx = ((i * prev_layer_shapes.at(2) + j) * prev_layer_shapes.at(1) + m) * prev_layer_shapes.at(0) + n;
-                                    fread((void *)(&weights_data[new_idx]), sizeof(float), 1, fp);
+                    int input_c = prev_layer_shapes.at(2);
+                    int input_h = prev_layer_shapes.at(0);
+                    int input_w = prev_layer_shapes.at(1);
+
+                    float *buffer = (float *) calloc(num_neurons, sizeof(float));
+                    for(int c = 0 ; c < input_c ; c++) {
+                        for(int h = 0 ; h < input_h ; h++) {
+                            for(int w = 0 ; w < input_w ; w++) {
+                                fread(buffer, sizeof(float), num_neurons, fp);
+                                for(int n = 0 ; n < num_neurons ; n++) {
+                                    int idx = ((n * input_h + h) * input_w + w) * input_c + c;
+                                    weights_data[idx] = buffer[n];
                                 }
                             }
                         }
                     }
+                    free(buffer);
                 }
             }
             fclose(fp);

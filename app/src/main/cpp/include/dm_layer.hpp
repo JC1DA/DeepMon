@@ -28,6 +28,9 @@ namespace deepmon {
         string GetName() {
             return this->name;
         }
+        string GetType() {
+            return this->type;
+        }
         vector<string> GetBottomLayersNames() {
             return vector<string>(bottom_layers);
         }

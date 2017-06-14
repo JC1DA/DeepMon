@@ -10,25 +10,26 @@ kernel void fc_base(
     for(int n = get_global_id(0); n < output_size ; n += get_global_size(0)) {
         real result = 0.0f;
 
-        int input_idx = 0;
-        int filter_idx = n * input_size;
-
         int idx_remaining = input_size;
 
+        __global real *input_ptr = input_frame + offset_idx * input_size;
+        __global real *filter_ptr = layer_W + n * input_size;
+
         while(idx_remaining >= VWM) {
-            realM tmp1 = vloadM(input_frame[input_idx]);
-            realM tmp2 = vloadM(layer_W[filter_idx]);
+            realM tmp1 = vloadM(*input_ptr);
+            realM tmp2 = vloadM(*filter_ptr);
             result += dot(tmp1,tmp2);
 
-            input_idx += VWM;
-            filter_idx += VWM;
+            input_ptr += VWM;
+            filter_ptr += VWM;
             idx_remaining -= VWM;
         }
 
         while(idx_remaining > 0) {
-            real tmp1 = input_frame[input_idx];
-            real tmp2 = layer_W[filter_idx];
-            result += tmp1 * tmp2;
+            result += (*input_ptr) * (*filter_ptr);
+
+            input_ptr++;
+            filter_ptr++;
 
             idx_remaining -= 1;
         }

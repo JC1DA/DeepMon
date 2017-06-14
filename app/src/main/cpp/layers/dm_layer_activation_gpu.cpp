@@ -24,7 +24,7 @@ namespace deepmon {
         err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_out);
 
         if(precision == PRECISION_32) {
-            float zero_data = 0;
+            float zero_data = activation_threshold;
             err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &zero_data);
         } else {
             half threshold = FloatToHalf(activation_threshold);
