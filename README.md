@@ -11,7 +11,7 @@ Yolo-Tiny: https://mega.nz/#!Ot5klLRR
 
 Yolo-Large: Uploading soon
 
-VGG-F: Uploading soon
+VGG-F: https://mega.nz/#!q8x1lCLZ
 
 VGG-16: Uploading soon
 
