@@ -16,10 +16,9 @@ VGG-F: Uploading soon
 VGG-16: Uploading soon
 
 Converter:
+
 From DeepSense: https://mega.nz/#!H5YFlTaL
 
 From Matconvnet: https://mega.nz/#!Lh5iWR7L
 
-From Caffe:
-
-From Yolo-Darknet:
+More is coming
