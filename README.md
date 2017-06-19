@@ -21,4 +21,4 @@ From DeepSense: https://mega.nz/#!H5YFlTaL
 
 From Matconvnet: https://mega.nz/#!Lh5iWR7L
 
-More is coming
+More is coming soon.
