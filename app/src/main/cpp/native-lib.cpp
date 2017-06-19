@@ -33,25 +33,8 @@ using namespace deepmon;
 DM_Net *net = NULL;
 
 extern "C"
-JNIEXPORT jstring JNICALL
-Java_com_lanytek_deepmon_MainActivity_stringFromJNI(
-        JNIEnv *env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
-}
-
-extern "C"
 JNIEXPORT void JNICALL
-Java_com_lanytek_deepmon_MainActivity_testDeepMon(
-        JNIEnv* env,
-        jobject /* this */) {
-    DeepMon dm = DeepMon::Get();
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_lanytek_deepmon_MainActivity_InitDeepMonWithPackageName(
+Java_com_lanytek_deepmon_DeepMon_InitDeepMonWithPackageName(
         JNIEnv* env,
         jobject thisobj/* this */,
         jstring package_name) {
@@ -68,7 +51,7 @@ Java_com_lanytek_deepmon_MainActivity_InitDeepMonWithPackageName(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_lanytek_deepmon_MainActivity_LoadNet(
+Java_com_lanytek_deepmon_DeepMon_LoadNet(
         JNIEnv* env,
         jobject thisobj/* this */,
         jstring model_dir_path) {
@@ -83,7 +66,7 @@ Java_com_lanytek_deepmon_MainActivity_LoadNet(
 
 extern "C"
 JNIEXPORT jfloatArray JNICALL
-        Java_com_lanytek_deepmon_MainActivity_GetInference(
+        Java_com_lanytek_deepmon_DeepMon_GetInference(
                 JNIEnv* env,
                 jobject thisobj/* this */,
                 jfloatArray input_arr
@@ -101,27 +84,6 @@ JNIEXPORT jfloatArray JNICALL
 
     jfloatArray resultArr = env->NewFloatArray(net->GetOutputSize());
     env->SetFloatArrayRegion(resultArr, 0, net->GetOutputSize(), result->get_cpu_data());
-
-    return resultArr;
-}
-
-extern "C"
-JNIEXPORT jfloatArray JNICALL
-Java_com_lanytek_deepmon_MainActivity_TestInference(
-        JNIEnv* env,
-        jobject thisobj/* this */
-) {
-    float *data = (float *) malloc(3 * 448 * 448 * sizeof(float));
-    FILE *fp = fopen("/sdcard/dump/input", "r");
-    fread(data, 3 * 448 * 448, sizeof(float), fp);
-    fclose(fp);
-
-    DM_Blob *input = new DM_Blob(vector<uint32_t>{1, 448, 448, 3}, ENVIRONMENT_GPU, PRECISION_32, data);
-
-    DM_Blob *result = net->Forward(input); //this is cpu blob
-
-    jfloatArray resultArr = env->NewFloatArray(1470);
-    env->SetFloatArrayRegion(resultArr, 0, 1470, result->get_cpu_data());
 
     return resultArr;
 }

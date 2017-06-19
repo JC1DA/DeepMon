@@ -173,10 +173,6 @@ namespace deepmon {
         this->pipeline.at(0)->EnqueueInputBlob(input_blob);
         DM_Blob *result = NULL;
 
-        //for debugging
-        int grouth_truth_idx_mapping = 0;
-        int checking_gt_failed = 0;
-
         for(int i = 0 ; i < pipeline.size() ; i++) {
             LOGD("Processing layer %s", pipeline.at(i)->GetName().c_str());
 
@@ -186,57 +182,11 @@ namespace deepmon {
                 break;
             }
 
-            //debugging gpu
-            if(0) {
-                DM_Blob *tmp = result->ConvertToCpuBlob();
-                delete result;
-                result = tmp;
-
-                //debugging - compare output to grouth-truth
-                if(!checking_gt_failed) {
-                    if(i > 0 && i < pipeline.size() - 1) {
-                        if(pipeline.at(i + 1)->GetType().compare(LAYER_NAME_ACTIVATION)) {
-                            char gt_file_path[512]; gt_file_path[0] = '\0';
-                            sprintf(gt_file_path,"/sdcard/dump/l_%d",grouth_truth_idx_mapping);
-
-                            float *gt_data = (float *)malloc(result->get_size() * sizeof(float));
-
-                            FILE *fp = fopen(gt_file_path, "r");
-                            fread(gt_data, result->get_size(), sizeof(float), fp);
-                            fclose(fp);
-
-                            //compare with gt data
-                            for(int z = 0 ; z < result->get_size() ; z++) {
-                                float distance = gt_data[z] - result->get_cpu_data()[z];
-                                float delta = 0.006;
-                                if(-delta < distance && distance < delta) {
-                                    continue;
-                                } else {
-                                    LOGD("result[%d] != gt[%d] (%f != %f)",z, z, result->get_cpu_data()[z], gt_data[z]);
-                                    checking_gt_failed = 1;
-                                    break;
-                                }
-                            }
-
-                            free(gt_data);
-
-                            grouth_truth_idx_mapping++;
-                        }
-                    }
-                }
-            }
-
             //send to upper layer's queues
             vector<string> top_layers_names = pipeline.at(i)->GetTopLayersNames();
             for(int j = 0 ; j < top_layers_names.size() ; j++) {
                 name_to_layer_map.find(top_layers_names.at(j))->second->EnqueueInputBlob(result);
             }
-
-            /*if(i == 1) {
-                DM_Blob *tmp = result->ConvertToCpuBlob();
-                tmp->print_blob();
-                delete tmp;
-            }*/
         }
 
         if(result != NULL && result->is_corrupted()) {

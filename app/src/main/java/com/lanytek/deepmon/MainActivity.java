@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 Utilities.copyFile(activity, "pooling.cl");
                 Utilities.copyFile(activity, "fc.cl");
                 Utilities.copyFile(activity, "activation.cl");
-                InitDeepMonWithPackageName(activity.getPackageName().toString());
+                DeepMon.InitDeepMonWithPackageName(activity.getPackageName().toString());
             }
         });
 
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Yolo-Tiny";
-                LoadNet(path);
+                DeepMon.LoadNet(path);
             }
         });
 
@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 double x1 = System.currentTimeMillis();
-                float [] result = GetInference(bitmapArray);
+                float [] result = DeepMon.GetInference(bitmapArray);
                 double x2 = System.currentTimeMillis();
                 cnn_runtime = x2 - x1;
                 Log.d(TAG,"CNN RUNTIME: " + cnn_runtime + "ms");
@@ -313,15 +313,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native void testDeepMon();
-    public native void InitDeepMonWithPackageName(String package_name);
-    public native void LoadNet(String model_dir_path);
-    public native float [] GetInference(float [] input);
-    public native float [] TestInference();
 }
