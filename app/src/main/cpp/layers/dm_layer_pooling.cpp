@@ -142,4 +142,8 @@ namespace deepmon {
 
         return do_pooling_gpu(input);
     }
+
+    DM_Blob* DM_Layer_Pooling::ForwardCache(vector<DM_Blob *> blobs) {
+        return ForwardGpu(blobs);
+    }
 }

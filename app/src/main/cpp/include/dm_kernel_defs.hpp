@@ -12,6 +12,7 @@ namespace deepmon {
 
 #define KERNEL_DM_CONV_BASE             "dm_conv_base"
 #define KERNEL_DM_CONV_LOCAL            "dm_conv_local"
+#define KERNEL_DM_CONV_CACHING          "dm_conv_with_cache"
 
 #define KERNEL_DM_FC_BASE                  "fc_base"
 

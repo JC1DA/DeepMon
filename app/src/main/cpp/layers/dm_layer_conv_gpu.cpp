@@ -244,4 +244,93 @@ namespace deepmon {
 
         return output;
     }
+
+    void DM_Layer_Conv::DM_LAYOUT_conv_caching_gpu(DM_Blob *input, DM_Blob *output) {
+        cl_int err = CL_SUCCESS;
+        cl_command_queue current_queue = DeepMon::Get().GetGpuExecutionEngine().GetCurrentQueue();
+
+        cl_kernel kernel = DeepMon::Get().GetGpuExecutionEngine().GetKernel(precision, KERNEL_DM_CONV_CACHING);
+
+        cl_mem cl_input = input->get_gpu_data();
+        cl_mem cl_output = output->get_gpu_data();
+
+        cl_mem cl_non_cached_blk_x_indices = clCreateBuffer(
+                DeepMon::Get().GetGpuExecutionEngine().GetContext(),
+                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                GetCachingSideX() * GetCachingSideY() * sizeof(int), //size in bytes
+                GetCachingNonCachedBlockIndicesX(),//buffer of data
+                &err);
+        cl_mem cl_non_cached_blk_y_indices = clCreateBuffer(
+                DeepMon::Get().GetGpuExecutionEngine().GetContext(),
+                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                GetCachingSideX() * GetCachingSideY() * sizeof(int), //size in bytes
+                GetCachingNonCachedBlockIndicesY(),//buffer of data
+                &err);
+
+        //assume only 1 item per batch
+        int i = 0;
+        err  = clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_input);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->input_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_channels);
+        cl_mem filters_data = this->filters->get_gpu_data();
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &filters_data);
+        cl_mem biases_data  = this->biases->get_gpu_data();
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &biases_data);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->filter_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_channels);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_filters);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->stride_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_left);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_right);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_top);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->pad_bottom);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_output);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_w);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &output_h);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &this->num_filters);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_non_cached_blk_x_indices);
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &cl_non_cached_blk_y_indices);
+        int block_size_x = GetCachingBlockSizeX();
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &block_size_x);
+        int block_size_y = GetCachingBlockSizeY();
+        err |= clSetKernelArg(kernel, i++, sizeof(cl_int), &block_size_y);
+
+        SAMPLE_CHECK_ERRORS(err);
+        if(err != CL_SUCCESS) {
+            output->set_corrupted(true);
+            return;
+        }
+
+        int wgs_1 = GetCachingTotalNonCachedBlocks() * block_size_x * block_size_y;
+        size_t wgs[2] = {(size_t)wgs_1, (size_t)num_filters};
+
+        err = clEnqueueNDRangeKernel(
+                current_queue,
+                kernel,
+                2,
+                0,
+                wgs,
+                0,
+                0, 0, 0
+        );
+        SAMPLE_CHECK_ERRORS(err);
+        if(err != CL_SUCCESS) {
+            output->set_corrupted(true);
+            return;
+        }
+
+        err = clFinish(current_queue);
+        SAMPLE_CHECK_ERRORS(err);
+        if(err != CL_SUCCESS) {
+            output->set_corrupted(true);
+            return;
+        }
+
+        clReleaseMemObject(cl_non_cached_blk_x_indices);
+        clReleaseMemObject(cl_non_cached_blk_y_indices);
+    }
 }
+

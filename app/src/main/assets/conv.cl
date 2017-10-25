@@ -149,3 +149,75 @@ __kernel void dm_conv_local(
     if(threadId_x < output_w && threadId_y < output_h)
         output[output_offset + (threadId_y * output_w + threadId_x) * conv_n + threadId_z] = result + bias[threadId_z];
 }
+
+__kernel void dm_conv_with_cache(
+    __global const real *input,
+    const int input_w,
+    const int input_h,
+    const int input_c,
+    __global const real *filter_Weights,
+    __global const real *filter_biases,
+    const int filter_w,
+    const int filter_h,
+    const int filter_c,
+    const int filter_n,
+    const int stride_w,
+    const int stride_h,
+    const int pad_left,
+    const int pad_right,
+    const int pad_top,
+    const int pad_bot,
+    __global real *output,
+    const int output_w,
+    const int output_h,
+    const int output_c,
+    __global const int *nonCachedIdx_x,
+    __global const int *nonCachedIdx_y,
+    const int blk_size_x,
+    const int blk_size_y
+) {
+    const int blk_idx = get_global_id(0) / (blk_size_x * blk_size_y);
+    const int blk_x = nonCachedIdx_x[blk_idx];
+    const int blk_y = nonCachedIdx_y[blk_idx];
+
+    const int idx = get_global_id(0) % (blk_size_x * blk_size_y);
+
+    int threadId_x = blk_x * blk_size_x + idx % blk_size_x;
+    int threadId_y = blk_y * blk_size_y + idx / blk_size_y;
+    int threadId_z = get_global_id(1);
+
+    real result = 0;
+
+    for(int y = 0 ; y < filter_h ; y++) {
+        int global_input_y = threadId_y * stride_h - pad_top + y;
+        for(int x = 0 ; x < filter_w ; x++) {
+            int global_input_x = threadId_x * stride_w - pad_left + x;
+                int remaining = input_c;
+
+                int GI_idx = (global_input_y * input_w + global_input_x) * input_c;
+                int GW_idx = ((threadId_z * filter_h + y) * filter_w + x) * filter_c;
+
+                const int need_to_process = (0 <= global_input_x && \
+                        								global_input_x < input_w && \
+                        								0 <= global_input_y && \
+                        								global_input_y < input_h) ? 1 : 0;
+
+                while(remaining > VWM) {
+                    realM input_data =  (need_to_process == 0) ? 0 : vloadM(input[GI_idx]);
+                    realM filter_data = (need_to_process == 0) ? 0 : vloadM(filter_Weights[GW_idx]);
+                    result += dotM(input_data, filter_data);
+                    remaining -= VWM;
+                    GI_idx += VWM;
+                    GW_idx += VWM;
+                }
+                while(remaining > 0) {
+                    result += (need_to_process == 0) ? 0 : (input[GI_idx] * filter_Weights[GW_idx]);
+                    remaining--;
+                    GI_idx++;
+                    GW_idx++;
+                }
+        }
+    }
+
+    output[(threadId_y * output_w + threadId_x) * output_c + threadId_z] = result + filter_biases[threadId_z];
+}

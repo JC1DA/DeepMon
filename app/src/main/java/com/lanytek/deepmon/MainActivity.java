@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btn_Init;
     private Button btn_Read_Net;
     private Button btn_Process;
+    private Button btn_Process_With_Cache;
 
     ImageView iv;
 
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         btn_Init = (Button) findViewById(R.id.btn_Init);
         btn_Read_Net = (Button) findViewById(R.id.btn_read_net);
         btn_Process = (Button) findViewById(R.id.btn_process);
+        btn_Process_With_Cache = (Button) findViewById(R.id.btn_process_cache);
 
         iv = (ImageView) findViewById(R.id.iv_image);
 
@@ -101,6 +103,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 new async_processImage_yolo().execute();
                 //TestInference();
+            }
+        });
+
+        btn_Process_With_Cache.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new async_processImage_yolo_with_caching().execute();
             }
         });
 
@@ -267,6 +276,171 @@ public class MainActivity extends AppCompatActivity {
             t2 = System.currentTimeMillis();
             double runtime = t2 - t1;
             btn_Process.setEnabled(true);
+        }
+    }
+
+    float [] prev_frame = null;
+    private class async_processImage_yolo_with_caching extends AsyncTask<Void, Void, Void> {
+
+        private double t1,t2;
+        private double cnn_runtime;
+        private float [] result;
+        private Bitmap bm = null;
+
+        @Override
+        protected void onPreExecute() {
+            btn_Process_With_Cache.setEnabled(false);
+            t1 = System.currentTimeMillis();
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            if(selectedImagePath != null) {
+                final int IMG_X = 448;
+                final int IMG_Y = 448;
+                final int IMG_C = 3;
+
+                final float [] bitmapArray = new float[IMG_X * IMG_Y * IMG_C];
+
+                try {
+                    bm = Picasso.with(activity)
+                            .load(new File(selectedImagePath))
+                            .config(Bitmap.Config.ARGB_8888)
+                            .resize(IMG_X,IMG_Y)
+                            .get();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if(bm != null) {
+
+
+                    for(int w = 0 ; w < bm.getWidth() ; w++) {
+                        for(int h = 0 ; h < bm.getHeight() ; h++) {
+                            int pixel = bm.getPixel(w, h);
+                            for(int c = 0 ; c < 3 ; c++) {
+                                bitmapArray[h * IMG_X * IMG_C + w * IMG_C + c] = getColorPixel(pixel, c);
+                            }
+                        }
+                    }
+                }
+
+                double x1 = System.currentTimeMillis();
+
+                int side_x = 8;
+                int side_y = 8;
+                int [] non_cached_blk_x_indices = new int[side_x * side_y];
+                int [] non_cached_blk_y_indices = new int[side_x * side_y];
+                int total_non_cached_blks = 0;
+
+                if(prev_frame == null) {
+                    for(int i = 0 ; i < side_x ; i++) {
+                        for(int j = 0 ; j < side_y ; j++) {
+                            non_cached_blk_x_indices[total_non_cached_blks] = i;
+                            non_cached_blk_y_indices[total_non_cached_blks] = j;
+                            total_non_cached_blks++;
+                        }
+                    }
+                } else {
+                    total_non_cached_blks = Utilities.compute_histogram(bitmapArray, prev_frame, non_cached_blk_x_indices, non_cached_blk_y_indices, 448, 448, 3, side_x, side_y, 16, 0.05f);
+                }
+
+                float [] result = DeepMon.GetInferenceCache(bitmapArray, total_non_cached_blks, non_cached_blk_x_indices, non_cached_blk_y_indices);
+                double x2 = System.currentTimeMillis();
+                cnn_runtime = x2 - x1;
+                Log.d(TAG,"CNN RUNTIME: " + cnn_runtime + "ms");
+
+                if(prev_frame == null) {
+                    prev_frame = bitmapArray;
+                } else {
+                    prev_frame = null;
+                }
+
+                int classes = 20;
+                int side = 7;
+                int num = 2;
+                float thresh = 0.15f;
+
+                //process result first
+                float [][] probs = new float[side * side * num][classes];
+                Utilities.box[] boxes = new Utilities.box[side * side * num];
+                for(int j = 0 ; j < boxes.length ; j++)
+                    boxes[j] = new Utilities.box();
+
+                convert_yolo_detections(result, classes, num, 1, side, 1, 1, thresh, probs, boxes, 0);
+
+                do_nms_sort(boxes, probs, side * side * num, classes, 0.5f);
+
+                //do box drawing
+                final Bitmap mutableBitmap = Bitmap.createScaledBitmap(
+                        bm, 512, 512, false).copy(bm.getConfig(), true);
+                final Canvas canvas = new Canvas(mutableBitmap);
+
+                for(int i = 0; i < side * side * num; ++i){
+
+                    int classid = -1;
+                    float maxprob = -100000.0f;
+                    for(int j = 0 ; j < classes ; j++) {
+                        if(probs[i][j] > maxprob) {
+                            classid = j;
+                            maxprob = probs[i][j];
+                        }
+                    }
+
+                    if(classid < 0)
+                        continue;
+
+                    float prob = probs[i][classid];
+                    if(prob > thresh){
+                        /*int width = 8;
+                        //classid = classid * side % classes;
+                        float red = get_color(0,classid,classes);
+                        float green = get_color(1,classid,classes);
+                        float blue = get_color(2,classid,classes);*/
+                        Utilities.box b = boxes[i];
+
+                        int left  = (int) ((b.x-b.w/2.) * mutableBitmap.getWidth());
+                        int right = (int) ((b.x+b.w/2.) * mutableBitmap.getWidth());
+                        int top   = (int) ((b.y-b.h/2.) * mutableBitmap.getHeight());
+                        int bot   = (int) ((b.y+b.h/2.) * mutableBitmap.getHeight());
+
+                        if(left < 0) left = 0;
+                        if(right > mutableBitmap.getWidth() - 1) right = mutableBitmap.getWidth() - 1;
+                        if(top < 0) top = 0;
+                        if(bot > mutableBitmap.getHeight() - 1) bot = mutableBitmap.getHeight() - 1;
+
+                        Paint p = new Paint();
+                        p.setStrokeWidth(p.getStrokeWidth() * 3);
+                        p.setColor(Color.RED);
+                        canvas.drawLine(left, top, right, top, p);
+                        canvas.drawLine(left, top, left, bot, p);
+                        canvas.drawLine(left, bot, right, bot, p);
+                        canvas.drawLine(right, top, right, bot, p);
+
+                        p.setTextSize(48f);
+                        p.setColor(Color.BLUE);
+                        canvas.drawText("" + yolo_descriptions[classid],left + (right - left)/2,top + (bot - top)/2,p);
+                    }
+                }
+
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        iv.setImageBitmap(mutableBitmap);
+                    }
+                });
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            t2 = System.currentTimeMillis();
+            double runtime = t2 - t1;
+            btn_Process_With_Cache.setEnabled(true);
         }
     }
 

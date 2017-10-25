@@ -104,4 +104,8 @@ namespace deepmon {
 
         return input;
     }
+
+    DM_Blob* DM_Layer_Data::ForwardCache(vector<DM_Blob *> blobs) {
+        return ForwardGpu(blobs);
+    }
 }

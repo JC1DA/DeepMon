@@ -157,4 +157,8 @@ namespace deepmon {
             delete weights_data;
         }
     }
+
+    DM_Blob* DM_Layer_Fc::ForwardCache(vector<DM_Blob *> blobs) {
+        return ForwardGpu(blobs);
+    }
 }

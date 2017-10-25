@@ -1,6 +1,7 @@
 package com.lanytek.deepmon;
 
 import android.app.Activity;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -218,6 +219,89 @@ public class Utilities {
                 }
             }
         }
+    }
+
+    public static int compute_histogram(float [] img_1, float [] img_2,
+                                         int [] non_cached_blk_x_indices, int [] non_cached_blk_y_indices,
+                                         int size_w, int size_h, int size_c,
+                                         int side_x, int side_y, int num_buckets, float threshold) {
+
+        int total_non_cached_blks = 0;
+
+        int blk_size_x = size_w / side_x;
+        int blk_size_y = size_h / side_y;
+
+        float [][][][] histogram_1 = new float[side_x][side_y][num_buckets][size_c];
+        float [][][][] histogram_2 = new float[side_x][side_y][num_buckets][size_c];
+
+        for(int i = 0 ; i < side_x ; i++) {
+            for(int j = 0 ; j < side_y ; j++) {
+                for(int n = 0 ; n < num_buckets ; n++) {
+                    for(int c = 0 ; c < size_c ; c++) {
+                        histogram_1[i][j][n][c] = 1.0f;
+                        histogram_2[i][j][n][c] = 1.0f;
+                    }
+                }
+            }
+        }
+
+        for(int i = 0 ; i < size_w ; i++) {
+            for(int j = 0 ; j < size_h ; j++) {
+                int grid_x = i / blk_size_x;
+                if(grid_x >= side_x)
+                    grid_x = side_x - 1;
+                int grid_y = j / blk_size_y;
+                if(grid_y >= side_y)
+                    grid_y = side_y - 1;
+
+                for(int c = 0 ; c < size_c ; c++) {
+                    int idx_x1 = (int)(img_1[(j * size_w + i) * size_c + c] / (1.0 / 256) * num_buckets);
+                    int idx_x2 = (int)(img_2[(j * size_w + i) * size_c + c] / (1.0 / 256) * num_buckets);
+
+                    if(idx_x1 >= num_buckets)
+                        idx_x1 = num_buckets - 1;
+                    if(idx_x2 >= num_buckets)
+                        idx_x2 = num_buckets - 1;
+
+                    histogram_1[grid_x][grid_y][idx_x1][c] += 1;
+                    histogram_2[grid_x][grid_y][idx_x2][c] += 1;
+                }
+            }
+        }
+
+        for(int i = 0 ; i < side_x ; i++) {
+            for(int j = 0 ; j < side_y ; j++) {
+                float distance = 0.0f;
+
+                //normalize
+                int cur_blk_size_x = (i < side_x - 1) ? blk_size_x : blk_size_x + size_w % side_x;
+                int cur_blk_size_y = (j < side_y - 1) ? blk_size_y : blk_size_y + size_h % side_y;
+                int cur_blk_size = cur_blk_size_x * cur_blk_size_y;
+                for(int n = 0 ; n < num_buckets ; n++) {
+                    for(int c = 0 ; c < size_c ; c++) {
+                        histogram_1[i][j][n][c] /= cur_blk_size;
+                        histogram_2[i][j][n][c] /= cur_blk_size;
+                    }
+                }
+
+                //compute distance
+                for(int n = 0 ; n < num_buckets ; n++) {
+                    for(int c = 0 ; c < size_c ; c++) {
+                        float tmp = histogram_1[i][j][n][c] - histogram_2[i][j][n][c];
+                        distance += (tmp * tmp) / histogram_2[i][j][n][c];
+                    }
+                }
+
+                if(distance < threshold) {
+                    non_cached_blk_x_indices[total_non_cached_blks] = i;
+                    non_cached_blk_y_indices[total_non_cached_blks] = j;
+                    total_non_cached_blks++;
+                }
+            }
+        }
+
+        Log.d("Caching", "total_non_cached_blks = " + total_non_cached_blks);
+        return total_non_cached_blks;
     }
 
 }

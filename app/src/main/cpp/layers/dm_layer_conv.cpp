@@ -211,4 +211,57 @@ namespace deepmon {
 
         return this->do_conv_gpu(input);
     }
+
+    DM_Blob* DM_Layer_Conv::ForwardCache(vector<DM_Blob *> blobs) {
+        if(!IsCachable()) {
+            return ForwardGpu(blobs);
+        } else if(GetCachingResult() == NULL || GetCachingTotalNonCachedBlocks() == GetCachingSideX() * GetCachingBlockSizeY()) {
+            DM_Blob * output = ForwardGpu(blobs);
+
+            if(GetCachingResult() != NULL) {
+                DeleteCachingResult();
+            }
+            StoreCachingResult(output);
+
+            return output;
+        }
+        else {
+            if(blobs.size() != 1) {
+                LOGE("[%s] has more than 1 input", this->name.c_str());
+                return NULL;
+            }
+
+            DM_Blob *input = blobs[0];
+
+            if(input == NULL || input->get_shapes().size() != 4) {
+                LOGE("[%s]: Invalid Number of Dims (%d != 4) !!!", name.c_str(), input->get_shapes().size());
+                return NULL;
+            }
+
+            if(this->mem_layout == MEMORY_LAYOUT_CAFFE && input->get_shape_at(CAFFE_BLOB_INOUT_CHANNELS_IDX) != num_channels) {
+                LOGE("[%s]: Incorrect number of channels (%d != %d)", name.c_str(), input->get_shape_at(CAFFE_BLOB_INOUT_CHANNELS_IDX), num_channels);
+                return NULL;
+            }
+
+            DM_Blob *output = NULL;
+            if(GetCachingResult() == NULL) {
+                output = new DM_Blob(vector<uint32_t> {
+                        input->get_shape_at(0), output_shapes[0], output_shapes[1], output_shapes[2]
+                }, ENVIRONMENT_GPU, this->precision, NULL);
+            } else {
+                output = GetCachingResult()->CovnertToGpuBlob(this->precision);
+            }
+
+            DM_LAYOUT_conv_caching_gpu(input, output);
+
+            //we can store latest cached output for later use - it depends on caching strategy such as multiple propagations
+            if(GetCachingResult() == NULL) {
+                this->StoreCachingResult(output);
+            } else {
+                this->DeleteCachingResult();
+            }
+
+            return output;
+        }
+    }
 }

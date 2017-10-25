@@ -80,7 +80,40 @@ JNIEXPORT jfloatArray JNICALL
     DM_Blob *input = new DM_Blob(net->GetInputShapes(), ENVIRONMENT_GPU, PRECISION_32, data);
     env->ReleaseFloatArrayElements(input_arr, data, 0);
 
-    DM_Blob *result = net->Forward(input); //this is cpu blob
+    DM_Blob *result = net->Forward(input);
+
+    jfloatArray resultArr = env->NewFloatArray(net->GetOutputSize());
+    env->SetFloatArrayRegion(resultArr, 0, net->GetOutputSize(), result->get_cpu_data());
+
+    return resultArr;
+}
+
+extern "C"
+JNIEXPORT jfloatArray JNICALL
+Java_com_lanytek_deepmon_DeepMon_GetInferenceCache(
+        JNIEnv* env,
+        jobject thisobj/* this */,
+        jfloatArray input_arr,
+        jint total_non_cached_blocks,
+        jintArray non_cached_blocks_indices_x,
+        jintArray non_cached_blocks_indices_y
+) {
+    jfloat* data = env->GetFloatArrayElements(input_arr, 0);
+
+    jint* non_cached_blocks_indices_x_data = env->GetIntArrayElements(non_cached_blocks_indices_x, 0);
+    jint* non_cached_blocks_indices_y_data = env->GetIntArrayElements(non_cached_blocks_indices_y, 0);
+
+    //copy to cachable layers
+    net->SetUpCaching(total_non_cached_blocks, non_cached_blocks_indices_x_data, non_cached_blocks_indices_y_data);
+
+    /*
+     * Default only support 1 inference
+     */
+
+    DM_Blob *input = new DM_Blob(net->GetInputShapes(), ENVIRONMENT_GPU, PRECISION_32, data);
+    env->ReleaseFloatArrayElements(input_arr, data, 0);
+
+    DM_Blob *result = net->ForwardCache(input);
 
     jfloatArray resultArr = env->NewFloatArray(net->GetOutputSize());
     env->SetFloatArrayRegion(resultArr, 0, net->GetOutputSize(), result->get_cpu_data());

@@ -17,6 +17,7 @@ namespace deepmon {
         DM_Net(string model_dir_path);
 
         DM_Blob *Forward(DM_Blob *blob);
+        DM_Blob *ForwardCache(DM_Blob *blob);
 
         bool IsWorking() {
             if(!is_working)
@@ -76,6 +77,14 @@ namespace deepmon {
             for(int i = 0 ; i < output_shapes.size() ; i++)
                 size *= output_shapes.at(i);
             return size;
+        }
+
+        void SetUpCaching(int total_non_cached_blocks, int *non_cached_indices_x, int *non_cached_indices_y) {
+            for(int i = 0 ; i < pipeline.size() ; i++) {
+                if(pipeline.at(i)->IsCachable()) {
+                    pipeline.at(i)->SetUpCaching(total_non_cached_blocks, non_cached_indices_x, non_cached_indices_y);
+                }
+            }
         }
     };
 }

@@ -25,6 +25,7 @@ namespace deepmon {
         }
         DM_Blob *ForwardCpu(vector<DM_Blob *> blobs);
         DM_Blob *ForwardGpu(vector<DM_Blob *> blobs);
+        DM_Blob *ForwardCache(vector<DM_Blob *> blobs);
     };
 }
 

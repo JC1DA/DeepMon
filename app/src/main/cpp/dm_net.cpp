@@ -210,4 +210,51 @@ namespace deepmon {
 
         return result;
     }
+
+    DM_Blob* DM_Net::ForwardCache(DM_Blob *input_blob) {
+        if(!IsWorking()) {
+            return NULL;
+        }
+
+        //push input_blob into data layer
+        this->pipeline.at(0)->EnqueueInputBlob(input_blob);
+        DM_Blob *result = NULL;
+
+        for(int i = 0 ; i < pipeline.size() ; i++) {
+            LOGD("Processing layer %s", pipeline.at(i)->GetName().c_str());
+
+            result = pipeline.at(i)->ForwardCache();
+
+            if(result == NULL || result->is_corrupted()) {
+                break;
+            }
+
+            //send to upper layer's queues
+            vector<string> top_layers_names = pipeline.at(i)->GetTopLayersNames();
+            for(int j = 0 ; j < top_layers_names.size() ; j++) {
+                name_to_layer_map.find(top_layers_names.at(j))->second->EnqueueInputBlob(result);
+            }
+        }
+
+        if(result != NULL && result->is_corrupted()) {
+            delete result;
+            result = NULL;
+        }
+
+        if(result != NULL) {
+            //process final blob
+            DM_Blob *final_result = result->ConvertToCpuBlob();
+
+            //free result if needed
+            if(!pipeline.at(pipeline.size() - 1)->IsUsingPersistentBlob()) {
+                delete result;
+            }
+
+            result = final_result;
+            //result->print_blob();
+        }
+
+
+        return result;
+    }
 }

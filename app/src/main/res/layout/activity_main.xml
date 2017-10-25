@@ -39,4 +39,10 @@
         android:layout_height="wrap_content"
         android:text="Process Image"/>
 
+    <Button
+        android:id="@+id/btn_process_cache"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Process Image with Caching"/>
+
 </LinearLayout>

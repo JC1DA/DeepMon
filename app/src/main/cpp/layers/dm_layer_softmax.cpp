@@ -77,4 +77,8 @@ namespace deepmon {
     DM_Blob* DM_Layer_Softmax::ForwardGpu(vector<DM_Blob *> blobs) {
         return NULL;
     }
+
+    DM_Blob* DM_Layer_Softmax::ForwardCache(vector<DM_Blob *> blobs) {
+        return ForwardCpu(blobs);
+    }
 }
