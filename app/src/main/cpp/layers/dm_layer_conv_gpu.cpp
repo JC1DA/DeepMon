@@ -23,8 +23,6 @@
 
 #include <layers/dm_layer_conv.hpp>
 #include <dm.hpp>
-#include <clblast_c.h>
-#include <clblast.h>
 
 using namespace deepmon;
 namespace deepmon {
@@ -83,77 +81,9 @@ namespace deepmon {
 
         cl_command_queue queue = DeepMon::Get().GetGpuExecutionEngine().GetCurrentQueue();
         for (int b = 0; b < input->get_shapes()[0]; b++) {
-            cl_event event;
-            CLBlastStatusCode status;
-            if (precision == PRECISION_32) {
-                status = CLBlastSgemm(CLBlastLayoutRowMajor,
-                                                        CLBlastTransposeNo, CLBlastTransposeNo,
-                                                        m, n, k,
-                                                        1.0f,
-                                                        filters->get_gpu_data(), 0, k,
-                                                        im2col_blob->get_gpu_data(),
-                                                        b * input_offset, n,
-                                                        0,
-                                                        output->get_gpu_data(),
-                                                        b * output_offset, n,
-                                                        &queue, &event);
-            } else {
-                status = CLBlastHgemm(CLBlastLayoutRowMajor,
-                                                        CLBlastTransposeNo, CLBlastTransposeNo,
-                                                        m, n, k,
-                                                        1.0f,
-                                                        filters->get_gpu_data(), 0, k,
-                                                        im2col_blob->get_gpu_data(),
-                                                        b * input_offset, n,
-                                                        0,
-                                                        output->get_gpu_data(),
-                                                        b * output_offset, n,
-                                                        &queue, &event);
-            }
-
-            if (status == CLBlastSuccess) {
-                clWaitForEvents(1, &event);
-                clReleaseEvent(event);
-            } else {
-                LOGE("[%s]: Gemm_1 failed with status %d", this->name.c_str(), status);
-                output->set_corrupted(true);
-                break;
-            }
-
-            if (biases != NULL) {
-                if(precision == PRECISION_32) {
-                    status = CLBlastSgemm(
-                            CLBlastLayoutRowMajor,
-                            CLBlastTransposeNo, CLBlastTransposeNo,
-                            biases->get_shape_at(0), n, 1,
-                            1.0f,
-                            biases->get_gpu_data(), 0, 1,
-                            biases_multiplier_blob->get_gpu_data(), 0, n,
-                            1.0f, output->get_gpu_data(),
-                            b * output->get_total_size() / output->get_shape_at(0), n,
-                            &queue, &event);
-                } else {
-                    status = CLBlastHgemm(
-                            CLBlastLayoutRowMajor,
-                            CLBlastTransposeNo, CLBlastTransposeNo,
-                            biases->get_shape_at(0), n, 1,
-                            1.0f,
-                            biases->get_gpu_data(), 0, 1,
-                            biases_multiplier_blob->get_gpu_data(), 0, n,
-                            1.0f, output->get_gpu_data(),
-                            b * output->get_total_size() / output->get_shape_at(0), n,
-                            &queue, &event);
-                }
-
-                if (status == CLBlastSuccess) {
-                    clWaitForEvents(1, &event);
-                    clReleaseEvent(event);
-                } else {
-                    LOGE("[%s]: Gemm_2 failed with status %d", this->name.c_str(), status);
-                    output->set_corrupted(true);
-                    break;
-                }
-            }
+            /*
+             * FIXME: use ACL matrix multiplication to compute final results
+             */
         }
         
         delete im2col_blob;

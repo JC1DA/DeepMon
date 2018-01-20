@@ -25,7 +25,6 @@
 #include <string>
 #include <dm.hpp>
 #include <dm_net.hpp>
-#include <clblast_c.h>
 #include <cstdlib>
 
 using namespace deepmon;

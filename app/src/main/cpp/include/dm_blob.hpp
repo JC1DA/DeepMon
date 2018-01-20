@@ -6,6 +6,21 @@
 #include "dm_common.hpp"
 #include "dm_log.hpp"
 
+#define ARM_COMPUTE_CL /* So that OpenCL exceptions get caught too */
+
+#include "arm_compute/core/CL/CLKernelLibrary.h"
+#include "arm_compute/core/Types.h"
+#include "arm_compute/runtime/CL/CLFunctions.h"
+#include "arm_compute/runtime/CL/CLScheduler.h"
+//#include "arm_compute/tests/Utils.h"
+
+#include <arm_compute/core/Helpers.h>
+#include <arm_compute/core/ITensor.h>
+//#include <arm_compute/core/Validate.h>
+#include <arm_compute/runtime/Tensor.h>
+
+using namespace arm_compute;
+
 namespace deepmon {
     class DM_Blob {
     private:
@@ -19,6 +34,9 @@ namespace deepmon {
 
         float *cpu_data;
         cl_mem gpu_data;
+
+        //add ACL Tensor
+        CLTensor ATensor;
 
         bool is_persitent = false; //cannot be deleted during forward executions
 

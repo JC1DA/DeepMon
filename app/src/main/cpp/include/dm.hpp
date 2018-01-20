@@ -60,6 +60,7 @@ namespace deepmon {
                 blob->set_corrupted(true);
             }
         }
+
         DM_Blob *ConvertBlob(DM_Blob *blob, ENVIRONMENT_TYPE to_evn, PRESICION_TYPE to_precision) {
             DM_Blob *result = NULL;
 

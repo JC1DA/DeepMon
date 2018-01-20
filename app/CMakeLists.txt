@@ -15,10 +15,12 @@ set(source_DIR ${CMAKE_SOURCE_DIR}/src/main/cpp)
 
 add_library(lib_opencl SHARED IMPORTED)
 set_target_properties( lib_opencl PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/opencl/lib/${ANDROID_ABI}/libOpenCL.so )
+add_library(lib_acl_core SHARED IMPORTED)
+set_target_properties( lib_acl_core PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/acl/lib/${ANDROID_ABI}/libarm_compute_core.so )
+add_library(lib_acl SHARED IMPORTED)
+set_target_properties( lib_acl PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/acl/lib/${ANDROID_ABI}/libarm_compute.so )
 add_library(lib_jsoncpp SHARED IMPORTED)
 set_target_properties( lib_jsoncpp PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/jsoncpp/lib/${ANDROID_ABI}/libjsoncpp.so )
-add_library(lib_clblast STATIC IMPORTED)
-set_target_properties( lib_clblast PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/clblast/lib/${ANDROID_ABI}/libclblast.a )
 add_library(lib_openblas STATIC IMPORTED)
 set_target_properties( lib_openblas PROPERTIES IMPORTED_LOCATION ${distribution_DIR}/openblas/lib/${ANDROID_ABI}/libopenblas.a )
 
@@ -56,10 +58,9 @@ add_library( # Sets the name of the library.
              ${source_DIR}/layers/dm_layer_activation_gpu.cpp)
 
 target_include_directories(deepmon PRIVATE
-                                ${distribution_DIR}/opencl/include
+                                ${distribution_DIR}/acl/include
                                 ${distribution_DIR}/openblas/include
-                                ${distribution_DIR}/jsoncpp/include
-                                ${distribution_DIR}/clblast/include)
+                                ${distribution_DIR}/jsoncpp/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/main/cpp/include)
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -83,9 +84,10 @@ target_link_libraries( # Specifies the target library.
                        deepmon
 
                        lib_opencl
+                       lib_acl_core
+                       lib_acl
                        lib_openblas
                        lib_jsoncpp
-                       lib_clblast
 
                        # Links the target library to the log library
                        # included in the NDK.

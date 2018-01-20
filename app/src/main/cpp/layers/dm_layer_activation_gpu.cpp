@@ -23,7 +23,6 @@
 
 #include <layers/dm_layer_activation.hpp>
 #include <dm.hpp>
-#include <clblast_half.h>
 
 namespace deepmon {
 
@@ -46,8 +45,11 @@ namespace deepmon {
             float zero_data = activation_threshold;
             err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &zero_data);
         } else {
-            half threshold = FloatToHalf(activation_threshold);
-            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &threshold);
+            //half threshold = FloatToHalf(activation_threshold);
+            /*
+             * FIXME: please convert activation_threshold to half
+             */
+            err |= clSetKernelArg(kernel, i++, sizeof(cl_mem), &activation_threshold);
         }
 
         SAMPLE_CHECK_ERRORS(err);

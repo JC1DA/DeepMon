@@ -25,8 +25,6 @@
 #include <vector>
 #include <dm_common.hpp>
 #include <layers/dm_layer_fc.hpp>
-#include <clblast_c.h>
-#include <clblast.h>
 #include <dm.hpp>
 
 using namespace std;
