@@ -771,7 +771,34 @@ namespace deepmon {
     }
 
     void DM_Execution_Engine_GPU::AllocateMemory(DM_Blob *blob, float *initialized_data) {
+        /*
+         * Use ACL to allocate memory instead
+         */
+
         if(blob->get_env() == this->evn) {
+            const TensorShape tshape(blob->get_reverse_shapes());
+            blob->get_CLTensor()->allocator()->init(TensorInfo(tshape,(blob->get_precision() == PRECISION_32) ? Format::F32 : Format::F16));
+            blob->get_CLTensor()->allocator()->allocate();
+
+            int size_in_bytes = blob->get_size() * (blob->get_precision() == PRECISION_32 ? sizeof(cl_float) : sizeof(cl_half));
+            blob->set_mem_size(size_in_bytes);
+
+            cl::Buffer buffer = blob->get_CLTensor()->cl_buffer();
+            cl_mem cl_data = buffer.get();
+
+            if(initialized_data != NULL) {
+                if(!read_data_from_host(cl_data, initialized_data, size_in_bytes, blob->get_precision())) {
+                    blob->set_corrupted(true);
+                    return;
+                }
+            }
+
+            blob->set_gpu_data(cl_data);
+        } else {
+            blob->set_corrupted(true);
+        }
+
+        /*if(blob->get_env() == this->evn) {
             int size_in_bytes = 0;
             if(blob->get_precision() == PRECISION_32 && this->has_working_gpu) {
                 size_in_bytes = blob->get_size() * sizeof(cl_float);
@@ -805,7 +832,7 @@ namespace deepmon {
 
             blob->set_gpu_data(cl_data);
         } else
-            blob->set_corrupted(true);
+            blob->set_corrupted(true);*/
     }
 
     DM_Blob * DM_Execution_Engine_GPU::blob_convert_to_cpu_blob(DM_Blob *blob) {

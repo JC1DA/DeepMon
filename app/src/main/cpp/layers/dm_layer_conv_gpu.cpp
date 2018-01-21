@@ -44,11 +44,19 @@ namespace deepmon {
 
     void DM_Layer_Conv::CAFFE_LAYOUT_conv_gpu(DM_Blob *input, DM_Blob *output) {
 
-        std::vector<uint32_t> im2col_shapes{
+        /*
+         * FIXME: Currently force batch size to be 1
+         */
+
+        /*std::vector<uint32_t> im2col_shapes{
                 input->get_shape_at(CAFFE_BLOB_INOUT_BATCH_IDX),
                 num_channels * filter_h * filter_w,
                 output->get_shape_at(CAFFE_BLOB_INOUT_HEIGHT_IDX),
                 output->get_shape_at(CAFFE_BLOB_INOUT_WIDTH_IDX)
+        };*/
+        std::vector<uint32_t> im2col_shapes{
+                num_channels * filter_h * filter_w,
+                output->get_shape_at(CAFFE_BLOB_INOUT_HEIGHT_IDX) * output->get_shape_at(CAFFE_BLOB_INOUT_WIDTH_IDX)
         };
 
         DM_Blob *im2col_blob = new DM_Blob(im2col_shapes, ENVIRONMENT_GPU, this->precision,
@@ -79,12 +87,12 @@ namespace deepmon {
                                                  this->precision, biases_multiplier);
         }
 
-        cl_command_queue queue = DeepMon::Get().GetGpuExecutionEngine().GetCurrentQueue();
-        for (int b = 0; b < input->get_shapes()[0]; b++) {
-            /*
-             * FIXME: use ACL matrix multiplication to compute final results
-             */
-        }
+        /*
+         * FIXME: use ACL matrix multiplication to compute final results
+         */
+        CLGEMM gemm;
+        gemm.configure(im2col_blob->get_CLTensor(), this->filters->get_CLTensor(), NULL, output->get_CLTensor(), 1.0f, 0.0f);
+
         
         delete im2col_blob;
 

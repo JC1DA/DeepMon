@@ -36,7 +36,7 @@ namespace deepmon {
         cl_mem gpu_data;
 
         //add ACL Tensor
-        CLTensor ATensor;
+        CLTensor tensor;
 
         bool is_persitent = false; //cannot be deleted during forward executions
 
@@ -51,6 +51,14 @@ namespace deepmon {
         }
         std::vector<uint32_t> get_shapes() {
             return std::vector<uint32_t>(this->shapes);
+        }
+        std::vector<uint32_t> get_reverse_shapes() {
+            std::vector<uint32_t> v;
+            std::vector<uint32_t>::iterator it;
+            for(unsigned int i = shapes.size() - 1 ; i >= 0 ; i--) {
+                it = v.insert ( it , shapes[i] );
+            }
+            return v;
         }
         uint32_t get_size() {
             return this->size;
@@ -81,6 +89,9 @@ namespace deepmon {
         }
         void set_gpu_data(cl_mem data) {
             this->gpu_data = data;
+        }
+        CLTensor * get_CLTensor() {
+            return &tensor;
         }
         void set_persistent(bool is_persistent) {
             this->is_persitent = is_persistent;

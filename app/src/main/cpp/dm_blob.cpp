@@ -50,8 +50,9 @@ namespace deepmon {
                 delete this->cpu_data;
             this->cpu_data = NULL;
         } else {
-            if(this->gpu_data != NULL)
-                clReleaseMemObject(this->gpu_data);
+            /*
+             * Moving to ACL - Don't need to release gpu_data
+             */
             this->gpu_data = NULL;
         }
     }
